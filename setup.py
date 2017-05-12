@@ -19,6 +19,7 @@ setup(
     url='http://github.com/aldanor/ipybind',
     packages=['ipybind'],
     description='IPython and Jupyter integration for pybind11.',
+    install_requires=['ipython', 'pybind11'],
     classifiers=[
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
