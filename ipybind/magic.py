@@ -13,6 +13,7 @@ from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
 from IPython.core.magic import Magics, magics_class, cell_magic
+from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 from IPython.paths import get_ipython_cache_dir
 
 
@@ -33,6 +34,9 @@ class Pybind11BuildExt(build_ext):
 
 @magics_class
 class Pybind11Magics(Magics):
+    @magic_arguments()
+    @argument('-f', '--force', action='store_true',
+              help='Force recompilation of the module.')
     @cell_magic
     def pybind11(self, line, cell):
         """
@@ -44,10 +48,12 @@ class Pybind11Magics(Magics):
         current namespace.
         """
 
+        line = line.strip().rstrip(';')
+        args = parse_argstring(self.pybind11, line)
         module = 'pybind11_{}'.format(self.compute_hash(line, cell))
         code = self.format_code(cell)
         libfile = os.path.join(cache_dir(), module + self.ext_suffix)
-        need_rebuild = not os.path.isfile(libfile)
+        need_rebuild = not os.path.isfile(libfile) or args.force
         if need_rebuild:
             source = self.save_source(code, module)
             self.build_module(module, source)
