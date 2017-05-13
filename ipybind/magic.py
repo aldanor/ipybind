@@ -53,10 +53,6 @@ class Pybind11Magics(Magics):
             self.build_module(module, source)
         self.import_module(module, libfile)
 
-    def cache_dir(self):
-        root = os.path.abspath(os.path.expanduser(get_ipython_cache_dir()))
-        return os.path.join(root, 'pybind11')
-
     def compute_hash(self, line, cell):
         key = cell, line, sys.version_info, sys.executable
         return hashlib.md5(str(key).encode('utf-8')).hexdigest()[:7]
