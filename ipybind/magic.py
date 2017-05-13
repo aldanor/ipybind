@@ -37,6 +37,8 @@ class Pybind11Magics(Magics):
     @magic_arguments()
     @argument('-f', '--force', action='store_true',
               help='Force recompilation of the module.')
+    @argument('-v', '--verbose', action='store_true',
+              help='Display compilation output.')
     @cell_magic
     def pybind11(self, line, cell):
         """
@@ -56,7 +58,7 @@ class Pybind11Magics(Magics):
         need_rebuild = not os.path.isfile(libfile) or args.force
         if need_rebuild:
             source = self.save_source(code, module)
-            self.build_module(module, source)
+            self.build_module(module, source, args)
         self.import_module(module, libfile)
 
     def compute_hash(self, line, cell):
@@ -80,7 +82,7 @@ class Pybind11Magics(Magics):
     def ext_suffix(self):
         return sysconfig.get_config_var('EXT_SUFFIX') or sysconfig.get_config_var('SO')
 
-    def build_module(self, module, source):
+    def build_module(self, module, source, args):
         import pybind11
         ext = Extension(
             name=module,
@@ -102,7 +104,8 @@ class Pybind11Magics(Magics):
         if os.path.isdir(workdir):
             shutil.rmtree(workdir)
         os.makedirs(workdir, exist_ok=True)
-        args = ['build_ext', '--inplace', '--build-temp', workdir]
+        args = ['-v' if args.verbose else '-q']
+        args += ['build_ext', '--inplace', '--build-temp', workdir]
         setup(
             name=module,
             ext_modules=[ext],
