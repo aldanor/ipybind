@@ -1,13 +1,34 @@
 # -*- coding: utf-8 -*_
 
+import functools
 import hashlib
 import os
-import re
+import shutil
 import sys
+import sysconfig
 import textwrap
+
+from distutils.file_util import copy_file
+from setuptools import setup, Extension
+from setuptools.command.build_ext import build_ext
 
 from IPython.core.magic import Magics, magics_class, cell_magic
 from IPython.paths import get_ipython_cache_dir
+
+
+@functools.lru_cache()
+def cache_dir():
+    root = os.path.abspath(os.path.expanduser(get_ipython_cache_dir()))
+    return os.path.join(root, 'pybind11')
+
+
+class Pybind11BuildExt(build_ext):
+    def copy_extensions_to_source(self):
+        for ext in self.extensions:
+            filename = self.get_ext_filename(self.get_ext_fullname(ext.name))
+            src = os.path.join(self.build_lib, filename)
+            dest = os.path.join(cache_dir(), os.path.basename(filename))
+            copy_file(src, dest, verbose=self.verbose, dry_run=self.dry_run)
 
 
 @magics_class
@@ -25,9 +46,12 @@ class Pybind11Magics(Magics):
 
         module = 'pybind11_{}'.format(self.compute_hash(line, cell))
         code = self.format_code(cell, module)
-        filename = self.save_source(code, module)
+        libfile = os.path.join(cache_dir(), module + self.ext_suffix)
+        need_rebuild = not os.path.isfile(libfile)
+        if need_rebuild:
+            source = self.save_source(code, module)
+            self.build_module(module, source)
 
-    @property
     def cache_dir(self):
         root = os.path.abspath(os.path.expanduser(get_ipython_cache_dir()))
         return os.path.join(root, 'pybind11')
@@ -50,8 +74,35 @@ class Pybind11Magics(Magics):
         return code
 
     def save_source(self, code, module):
-        filename = os.path.join(self.cache_dir, module + '.cpp')
-        os.makedirs(self.cache_dir, exist_ok=True)
+        filename = os.path.join(cache_dir(), module + '.cpp')
+        os.makedirs(cache_dir(), exist_ok=True)
         with open(filename, 'w') as f:
             f.write(code)
         return filename
+
+    @property
+    def ext_suffix(self):
+        return sysconfig.get_config_var('EXT_SUFFIX') or sysconfig.get_config_var('SO')
+
+    def build_module(self, module, source):
+        import pybind11
+        ext = Extension(
+            name=module,
+            sources=[source],
+            include_dirs=[pybind11.get_include()],
+            library_dirs=[],
+            extra_compile_args=['-std=c++14'],
+            extra_link_args=[],
+            libraries=[],
+            language='c++'
+        )
+        workdir = os.path.join(cache_dir(), module)
+        os.makedirs(workdir, exist_ok=True)
+        args = ['build_ext', '--inplace', '--build-temp', workdir, '--build-lib', workdir]
+        setup(
+            name=module,
+            ext_modules=[ext],
+            script_args=args,
+            cmdclass={'build_ext': Pybind11BuildExt}
+        )
+        shutil.rmtree(workdir)
