@@ -4,7 +4,6 @@ import functools
 import hashlib
 import imp
 import os
-import shutil
 import sys
 import sysconfig
 
@@ -105,8 +104,6 @@ class Pybind11Magics(Magics):
             ]
         )
         workdir = os.path.join(cache_dir(), module)
-        if os.path.isdir(workdir):
-            shutil.rmtree(workdir)
         os.makedirs(workdir, exist_ok=True)
         args = ['-v' if args.verbose else '-q']
         args += ['build_ext', '--inplace', '--build-temp', workdir]
@@ -116,7 +113,6 @@ class Pybind11Magics(Magics):
             script_args=args,
             cmdclass={'build_ext': Pybind11BuildExt}
         )
-        shutil.rmtree(workdir)
 
     def import_module(self, module, libfile):
         mod = imp.load_dynamic(module, libfile)
