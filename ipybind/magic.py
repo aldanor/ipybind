@@ -7,7 +7,6 @@ import os
 import shutil
 import sys
 import sysconfig
-import textwrap
 
 from distutils.file_util import copy_file
 from setuptools import setup, Extension
@@ -46,7 +45,7 @@ class Pybind11Magics(Magics):
         """
 
         module = 'pybind11_{}'.format(self.compute_hash(line, cell))
-        code = self.format_code(cell, module)
+        code = self.format_code(cell)
         libfile = os.path.join(cache_dir(), module + self.ext_suffix)
         need_rebuild = not os.path.isfile(libfile)
         if need_rebuild:
@@ -62,17 +61,10 @@ class Pybind11Magics(Magics):
         key = cell, line, sys.version_info, sys.executable
         return hashlib.md5(str(key).encode('utf-8')).hexdigest()[:7]
 
-    def format_code(self, cell, module):
-        preamble = """
-        #include <pybind11/pybind11.h>
-        namespace py = pybind11;
-        #define PYBIND11_PLUGIN_(m) PYBIND11_PLUGIN({})
-        """.format(module)
-
-        code = cell.replace('PYBIND11_PLUGIN', 'PYBIND11_PLUGIN_')
-        code = textwrap.dedent(preamble) + code
-        code = code.strip() + '\n'
-
+    def format_code(self, cell):
+        code = cell.replace('PYBIND11_PLUGIN', '_PYBIND11_PLUGIN')
+        code = '#include <pybind11_preamble.h>\n' + code
+        code += '\n' * (not code.endswith('\n'))
         return code
 
     def save_source(self, code, module):
@@ -91,12 +83,18 @@ class Pybind11Magics(Magics):
         ext = Extension(
             name=module,
             sources=[source],
-            include_dirs=[pybind11.get_include()],
+            include_dirs=[
+                os.path.dirname(__file__),
+                pybind11.get_include()
+            ],
             library_dirs=[],
             extra_compile_args=['-std=c++14'],
             extra_link_args=[],
             libraries=[],
-            language='c++'
+            language='c++',
+            define_macros=[
+                ('_PYBIND11_MODULE_NAME', module)
+            ]
         )
         workdir = os.path.join(cache_dir(), module)
         if os.path.isdir(workdir):
