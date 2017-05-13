@@ -99,6 +99,8 @@ class Pybind11Magics(Magics):
             language='c++'
         )
         workdir = os.path.join(cache_dir(), module)
+        if os.path.isdir(workdir):
+            shutil.rmtree(workdir)
         os.makedirs(workdir, exist_ok=True)
         args = ['build_ext', '--inplace', '--build-temp', workdir, '--build-lib', workdir]
         setup(
