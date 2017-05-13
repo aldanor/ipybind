@@ -18,6 +18,7 @@ def setup_notebook():
     <style>
     .cm-s-ipython span.cm-variable-3 {
         color: #208ffb;
+        font-weight: bold;
     }
     </style>
     """
