@@ -102,7 +102,7 @@ class Pybind11Magics(Magics):
         if os.path.isdir(workdir):
             shutil.rmtree(workdir)
         os.makedirs(workdir, exist_ok=True)
-        args = ['build_ext', '--inplace', '--build-temp', workdir, '--build-lib', workdir]
+        args = ['build_ext', '--inplace', '--build-temp', workdir]
         setup(
             name=module,
             ext_modules=[ext],
