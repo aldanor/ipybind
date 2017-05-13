@@ -2,6 +2,7 @@
 
 import functools
 import hashlib
+import imp
 import os
 import shutil
 import sys
@@ -51,6 +52,7 @@ class Pybind11Magics(Magics):
         if need_rebuild:
             source = self.save_source(code, module)
             self.build_module(module, source)
+        self.import_module(module, libfile)
 
     def cache_dir(self):
         root = os.path.abspath(os.path.expanduser(get_ipython_cache_dir()))
@@ -106,3 +108,9 @@ class Pybind11Magics(Magics):
             cmdclass={'build_ext': Pybind11BuildExt}
         )
         shutil.rmtree(workdir)
+
+    def import_module(self, module, libfile):
+        mod = imp.load_dynamic(module, libfile)
+        for k, v in mod.__dict__.items():
+            if not k.startswith('__'):
+                self.shell.push({k: v})
