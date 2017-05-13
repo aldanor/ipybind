@@ -39,6 +39,8 @@ class Pybind11Magics(Magics):
               help='Force recompilation of the module.')
     @argument('-v', '--verbose', action='store_true',
               help='Display compilation output.')
+    @argument('-std', choices=['c++11', 'c++14', 'c++17'], default='c++14',
+              help='One of: c++11, c++14 or c++17. Default: c++14.')
     @cell_magic
     def pybind11(self, line, cell):
         """
@@ -92,7 +94,9 @@ class Pybind11Magics(Magics):
                 pybind11.get_include()
             ],
             library_dirs=[],
-            extra_compile_args=['-std=c++14'],
+            extra_compile_args=[
+                ('/std:' if os.name == 'nt' else '-std=') + args.std,
+            ],
             extra_link_args=[],
             libraries=[],
             language='c++',
