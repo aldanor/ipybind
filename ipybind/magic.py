@@ -111,12 +111,12 @@ class Pybind11Magics(Magics):
         )
         workdir = os.path.join(cache_dir(), module)
         os.makedirs(workdir, exist_ok=True)
-        args = ['-v' if args.verbose else '-q']
-        args += ['build_ext', '--inplace', '--build-temp', workdir]
+        script_args = ['-v' if args.verbose else '-q']
+        script_args += ['build_ext', '--inplace', '--build-temp', workdir]
         setup(
             name=module,
             ext_modules=[ext],
-            script_args=args,
+            script_args=script_args,
             cmdclass={'build_ext': Pybind11BuildExt}
         )
 
