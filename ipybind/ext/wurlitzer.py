@@ -29,10 +29,10 @@ libc = ctypes.CDLL(None)
 try:
     c_stdout_p = ctypes.c_void_p.in_dll(libc, 'stdout')
     c_stderr_p = ctypes.c_void_p.in_dll(libc, 'stderr')
-except ValueError: # pragma: no cover
+except ValueError:  # pragma: no cover
     # libc.stdout is has a funny name on OS X
-    c_stdout_p = ctypes.c_void_p.in_dll(libc, '__stdoutp') # pragma: no cover
-    c_stderr_p = ctypes.c_void_p.in_dll(libc, '__stderrp') # pragma: no cover
+    c_stdout_p = ctypes.c_void_p.in_dll(libc, '__stdoutp')  # pragma: no cover
+    c_stderr_p = ctypes.c_void_p.in_dll(libc, '__stderrp')  # pragma: no cover
 
 STDOUT = 2
 PIPE = 3
@@ -40,9 +40,10 @@ PIPE = 3
 _default_encoding = getattr(sys.stdin, 'encoding', None) or 'utf8'
 if _default_encoding.lower() == 'ascii':
     # don't respect ascii
-    _default_encoding = 'utf8' # pragma: no cover
+    _default_encoding = 'utf8'  # pragma: no cover
 
-class Wurlitzer(object):
+
+class Wurlitzer:
     """Class for Capturing Process-level FD output via dup2
 
     Typically used via `wurlitzer.capture`
@@ -84,7 +85,7 @@ class Wurlitzer(object):
 
         # make pipe_out non-blocking
         flags = fcntl(pipe_out, F_GETFL)
-        fcntl(pipe_out, F_SETFL, flags|os.O_NONBLOCK)
+        fcntl(pipe_out, F_SETFL, flags | os.O_NONBLOCK)
         return pipe_out
 
     def _decode(self, data):
@@ -243,6 +244,7 @@ def sys_pipes(encoding=_default_encoding):
 
 
 _mighty_wurlitzer = None
+
 
 def sys_pipes_forever(encoding=_default_encoding):
     """Redirect all C output to sys.stdout/err
