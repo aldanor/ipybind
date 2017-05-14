@@ -22,7 +22,11 @@ class Forwarder(Wurlitzer):
 
 @contextlib.contextmanager
 def forward(handler=None):
-    with Forwarder(handler=handler):
+    global _fwd
+    if _fwd is None:
+        with Forwarder(handler=handler):
+            yield
+    else:
         yield
 
 
