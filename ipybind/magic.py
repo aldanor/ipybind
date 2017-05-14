@@ -22,6 +22,14 @@ from ipybind.stream import forward, start_forwarding, stop_forwarding, suppress
 
 
 class BuildExt(build_ext):
+    @property
+    def is_unix(self):
+        return self.compiler.compiler_type == 'unix'
+
+    @property
+    def is_msvc(self):
+        return self.compiler.compiler_type == 'msvc'
+
     def has_flag(self, flag):
         with tempfile.NamedTemporaryFile('w', suffix='.cpp') as f:
             f.write('int main() { return 0; }')
@@ -32,12 +40,23 @@ class BuildExt(build_ext):
                 return False
         return True
 
+    def cpp_flag(self, std):
+        flag = '/std:' if self.is_msvc else '-std='
+        if std is None:
+            if self.has_flag(flag + 'c++14'):
+                std = 'c++14'
+            elif self.has_flag(flag + 'c++11'):
+                std = 'c++11'
+            else:
+                sys.exit('Unsupported compiler: at least C++11 support is required')
+        return flag + std
+
     def build_extensions(self):
-        compile_args = []
-        if self.compiler.compiler_type == 'unix':
-            if self.has_flag('-fvisibility=hidden'):
-                compile_args.append('-fvisibility=hidden')
         for ext in self.extensions:
+            compile_args = [self.cpp_flag(ext.args.std)]
+            if self.is_unix:
+                if self.has_flag('-fvisibility=hidden'):
+                    compile_args.append('-fvisibility=hidden')
             ext.extra_compile_args = compile_args + ext.extra_compile_args
         super().build_extensions()
 
@@ -56,8 +75,8 @@ class Pybind11Magics(Magics):
               help='Force recompilation of the module.')
     @argument('-v', '--verbose', action='store_true',
               help='Display compilation output.')
-    @argument('-std', choices=['c++11', 'c++14', 'c++17'], default='c++14',
-              help='One of: c++11, c++14 or c++17. Default: c++14.')
+    @argument('-std', choices=['c++11', 'c++14', 'c++17'],
+              help='C++ standard, defaults to C++14 if available.')
     @argument('-i', '--prefix-include', action='store_true',
               help='Add $PREFIX/include to include path.')
     @argument('--cc',
@@ -158,14 +177,12 @@ class Pybind11Magics(Magics):
             pass
         if args.prefix_include:
             include_dirs.append(os.path.join(sys.prefix, 'include'))
-        return Extension(
+        extension = Extension(
             name=module,
             sources=[source],
             include_dirs=include_dirs,
             library_dirs=[],
-            extra_compile_args=[
-                ('/std:' if os.name == 'nt' else '-std=') + args.std,
-            ],
+            extra_compile_args=[],
             extra_link_args=[],
             libraries=[],
             language='c++',
@@ -173,6 +190,8 @@ class Pybind11Magics(Magics):
                 ('_PYBIND11_MODULE_NAME', module)
             ]
         )
+        extension.args = args
+        return extension
 
     def forward_handler(self, source):
         def handler(data):
