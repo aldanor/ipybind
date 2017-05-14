@@ -17,7 +17,7 @@ from setuptools.command.build_ext import build_ext
 from IPython.core.magic import Magics, magics_class, cell_magic, line_magic, on_off
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 
-from ipybind.common import ext_suffix, ext_path
+from ipybind.common import ext_suffix, ext_path, is_kernel
 from ipybind.stream import forward, start_forwarding, stop_forwarding
 
 
@@ -96,6 +96,10 @@ class Pybind11Magics(Magics):
         To disable: `%pybind11_capture 0` or `%pybind11_capture off`.
         To toggle:  `%pybind11_capture`.
         """
+
+        if not is_kernel():
+            print('C++ stdout/stderr capturing is not available in the terminal environment.')
+            return
 
         p = parameter_s.strip().lower()
         if p:
