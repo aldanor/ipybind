@@ -6,7 +6,6 @@ import imp
 import os
 import re
 import sys
-import sysconfig
 import tempfile
 import warnings
 
@@ -18,7 +17,7 @@ from setuptools.command.build_ext import build_ext
 from IPython.core.magic import Magics, magics_class, cell_magic, line_magic, on_off
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 
-from ipybind.common import cache_dir
+from ipybind.common import cache_dir, ext_suffix
 from ipybind.stream import forward, start_forwarding, stop_forwarding
 
 
@@ -81,7 +80,7 @@ class Pybind11Magics(Magics):
         args = parse_argstring(self.pybind11, line)
         module = 'pybind11_{}'.format(self.compute_hash(line, cell))
         code = self.format_code(cell)
-        libfile = os.path.join(cache_dir(), module + self.ext_suffix)
+        libfile = os.path.join(cache_dir(), module + ext_suffix())
         need_rebuild = not os.path.isfile(libfile) or args.force
         if need_rebuild:
             source = self.save_source(code, module)
@@ -127,10 +126,6 @@ class Pybind11Magics(Magics):
         with open(filename, 'w') as f:
             f.write(code)
         return filename
-
-    @property
-    def ext_suffix(self):
-        return sysconfig.get_config_var('EXT_SUFFIX') or sysconfig.get_config_var('SO')
 
     @contextlib.contextmanager
     def with_env(self, **env_vars):

@@ -2,6 +2,7 @@
 
 import functools
 import os
+import sysconfig
 
 from IPython import get_ipython
 from IPython.paths import get_ipython_cache_dir
@@ -18,3 +19,9 @@ def cache_dir():
     """Root cache directory for pybind11 extension."""
     root = os.path.abspath(os.path.expanduser(get_ipython_cache_dir()))
     return os.path.join(root, 'pybind11')
+
+
+@functools.lru_cache()
+def ext_suffix():
+    """Get extension suffix for C extensions on this platform."""
+    return sysconfig.get_config_var('EXT_SUFFIX') or sysconfig.get_config_var('SO')
