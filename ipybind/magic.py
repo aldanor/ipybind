@@ -41,7 +41,7 @@ class Pybind11Magics(Magics):
               help='Display compilation output.')
     @argument('-std', choices=['c++11', 'c++14', 'c++17'], default='c++14',
               help='One of: c++11, c++14 or c++17. Default: c++14.')
-    @argument('--prefix-include', action='store_true',
+    @argument('-i', '--prefix-include', action='store_true',
               help='Add $PREFIX/include to include path.')
     @argument('--cc',
               help='Set CC environment variable.')
