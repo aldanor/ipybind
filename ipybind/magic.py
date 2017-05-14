@@ -40,6 +40,8 @@ class Pybind11Magics(Magics):
               help='Display compilation output.')
     @argument('-std', choices=['c++11', 'c++14', 'c++17'], default='c++14',
               help='One of: c++11, c++14 or c++17. Default: c++14.')
+    @argument('--prefix-include', action='store_true',
+              help='Add $PREFIX/include to include path.')
     @cell_magic
     def pybind11(self, line, cell):
         """
@@ -84,14 +86,18 @@ class Pybind11Magics(Magics):
         return sysconfig.get_config_var('EXT_SUFFIX') or sysconfig.get_config_var('SO')
 
     def build_module(self, module, source, args):
-        import pybind11
+        include_dirs = [os.path.dirname(__file__)]
+        try:
+            import pybind11
+            include_dirs.append(pybind11.get_include())
+        except ImportError:
+            pass
+        if args.prefix_include:
+            include_dirs.append(os.path.join(sys.prefix, 'include'))
         ext = Extension(
             name=module,
             sources=[source],
-            include_dirs=[
-                os.path.dirname(__file__),
-                pybind11.get_include()
-            ],
+            include_dirs=include_dirs,
             library_dirs=[],
             extra_compile_args=[
                 ('/std:' if os.name == 'nt' else '-std=') + args.std,
