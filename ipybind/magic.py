@@ -17,7 +17,7 @@ from setuptools.command.build_ext import build_ext
 from IPython.core.magic import Magics, magics_class, cell_magic, line_magic, on_off
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 
-from ipybind.common import cache_dir, ext_suffix
+from ipybind.common import ext_suffix, ext_path
 from ipybind.stream import forward, start_forwarding, stop_forwarding
 
 
@@ -44,7 +44,7 @@ class BuildExt(build_ext):
         for ext in self.extensions:
             filename = self.get_ext_filename(self.get_ext_fullname(ext.name))
             src = os.path.join(self.build_lib, filename)
-            dest = os.path.join(cache_dir(), os.path.basename(filename))
+            dest = ext_path(os.path.basename(filename))
             copy_file(src, dest, verbose=self.verbose, dry_run=self.dry_run)
 
 
@@ -80,7 +80,7 @@ class Pybind11Magics(Magics):
         args = parse_argstring(self.pybind11, line)
         module = 'pybind11_{}'.format(self.compute_hash(line, cell))
         code = self.format_code(cell)
-        libfile = os.path.join(cache_dir(), module + ext_suffix())
+        libfile = ext_path(module + ext_suffix())
         need_rebuild = not os.path.isfile(libfile) or args.force
         if need_rebuild:
             source = self.save_source(code, module)
@@ -121,8 +121,8 @@ class Pybind11Magics(Magics):
         return code
 
     def save_source(self, code, module):
-        filename = os.path.join(cache_dir(), module + '.cpp')
-        os.makedirs(cache_dir(), exist_ok=True)
+        filename = ext_path(module + '.cpp')
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
         with open(filename, 'w') as f:
             f.write(code)
         return filename
@@ -178,7 +178,7 @@ class Pybind11Magics(Magics):
 
     def build_module(self, module, source, args):
         with self.with_env(**{'CC': args.cc, 'CXX': args.cxx}):
-            workdir = os.path.join(cache_dir(), module)
+            workdir = ext_path(module)
             os.makedirs(workdir, exist_ok=True)
             script_args = ['-v' if args.verbose else '-q']
             script_args += ['build_ext', '--inplace', '--build-temp', workdir]

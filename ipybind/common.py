@@ -25,3 +25,8 @@ def cache_dir():
 def ext_suffix():
     """Get extension suffix for C extensions on this platform."""
     return sysconfig.get_config_var('EXT_SUFFIX') or sysconfig.get_config_var('SO')
+
+
+def ext_path(*path):
+    """Return an absolute path given a relative path within cache directory."""
+    return os.path.join(cache_dir(), *path)
