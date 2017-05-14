@@ -85,7 +85,7 @@ class Pybind11Magics(Magics):
     def ext_suffix(self):
         return sysconfig.get_config_var('EXT_SUFFIX') or sysconfig.get_config_var('SO')
 
-    def build_module(self, module, source, args):
+    def make_extension(self, module, source, args):
         include_dirs = [os.path.dirname(__file__)]
         try:
             import pybind11
@@ -94,7 +94,7 @@ class Pybind11Magics(Magics):
             pass
         if args.prefix_include:
             include_dirs.append(os.path.join(sys.prefix, 'include'))
-        ext = Extension(
+        return Extension(
             name=module,
             sources=[source],
             include_dirs=include_dirs,
@@ -109,13 +109,15 @@ class Pybind11Magics(Magics):
                 ('_PYBIND11_MODULE_NAME', module)
             ]
         )
+
+    def build_module(self, module, source, args):
         workdir = os.path.join(cache_dir(), module)
         os.makedirs(workdir, exist_ok=True)
         script_args = ['-v' if args.verbose else '-q']
         script_args += ['build_ext', '--inplace', '--build-temp', workdir]
         setup(
             name=module,
-            ext_modules=[ext],
+            ext_modules=[self.make_extension(module, source, args)],
             script_args=script_args,
             cmdclass={'build_ext': Pybind11BuildExt}
         )
