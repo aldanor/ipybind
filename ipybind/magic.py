@@ -18,7 +18,7 @@ from IPython.core.magic import Magics, magics_class, cell_magic, line_magic, on_
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 
 from ipybind.common import ext_suffix, ext_path, is_kernel
-from ipybind.stream import forward, start_forwarding, stop_forwarding
+from ipybind.stream import forward, start_forwarding, stop_forwarding, suppress
 
 
 class BuildExt(build_ext):
@@ -26,7 +26,8 @@ class BuildExt(build_ext):
         with tempfile.NamedTemporaryFile('w', suffix='.cpp') as f:
             f.write('int main() { return 0; }')
             try:
-                self.compiler.compile([f.name], extra_postargs=[flag])
+                with suppress():
+                    self.compiler.compile([f.name], extra_postargs=[flag])
             except CompileError:
                 return False
         return True

@@ -14,11 +14,22 @@ class Forwarder(Wurlitzer):
         self._data_handler = handler if handler is not None else lambda x: x
         super().__init__(stdout=sys.stdout, stderr=sys.stderr)
 
+    def _handle_data(self, data, stream):
+        data = self._data_handler(self._decode(data))
+        if data and stream:
+            stream.write(data)
+
     def _handle_stdout(self, data):
-        self._stdout.write(self._data_handler(self._decode(data)))
+        self._handle_data(data, self._stdout)
 
     def _handle_stderr(self, data):
-        self._stderr.write(self._data_handler(self._decode(data)))
+        self._handle_data(data, self._stderr)
+
+
+@contextlib.contextmanager
+def suppress():
+    with Forwarder(handler=lambda _: None):
+        yield
 
 
 @contextlib.contextmanager
