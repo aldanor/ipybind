@@ -33,12 +33,12 @@ class BuildExt(build_ext):
         return True
 
     def build_extensions(self):
-        opts = []
+        compile_args = []
         if self.compiler.compiler_type == 'unix':
             if self.has_flag('-fvisibility=hidden'):
-                opts.append('-fvisibility=hidden')
+                compile_args.append('-fvisibility=hidden')
         for ext in self.extensions:
-            ext.extra_compile_args.extend(opts)
+            ext.extra_compile_args = compile_args + ext.extra_compile_args
         super().build_extensions()
 
     def copy_extensions_to_source(self):
