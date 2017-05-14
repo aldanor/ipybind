@@ -9,6 +9,7 @@ import re
 import sys
 import sysconfig
 import tempfile
+import warnings
 
 from distutils.errors import CompileError
 from distutils.file_util import copy_file
@@ -173,6 +174,7 @@ class Pybind11Magics(Magics):
             if args.compiler is not None:
                 script_args += ['--compiler', args.compiler]
             with forward(self.forward_handler(source)):
+                warnings.filterwarnings('ignore', 'To exit')
                 setup(
                     name=module,
                     ext_modules=[self.make_extension(module, source, args)],
