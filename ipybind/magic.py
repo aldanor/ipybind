@@ -18,6 +18,8 @@ from IPython.core.magic import Magics, magics_class, cell_magic
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 from IPython.paths import get_ipython_cache_dir
 
+from ipybind.stream import forward
+
 
 @functools.lru_cache()
 def cache_dir():
@@ -162,12 +164,14 @@ class Pybind11Magics(Magics):
             script_args += ['build_ext', '--inplace', '--build-temp', workdir]
             if args.compiler is not None:
                 script_args += ['--compiler', args.compiler]
-            setup(
-                name=module,
-                ext_modules=[self.make_extension(module, source, args)],
-                script_args=script_args,
-                cmdclass={'build_ext': BuildExt}
-            )
+            handler = lambda s: s.replace(source, '<source>')
+            with forward(handler):
+                setup(
+                    name=module,
+                    ext_modules=[self.make_extension(module, source, args)],
+                    script_args=script_args,
+                    cmdclass={'build_ext': BuildExt}
+                )
 
     def import_module(self, module, libfile):
         mod = imp.load_dynamic(module, libfile)
