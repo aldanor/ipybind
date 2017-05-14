@@ -57,6 +57,8 @@ class BuildExt(build_ext):
             if self.is_unix:
                 if self.has_flag('-fvisibility=hidden'):
                     compile_args.append('-fvisibility=hidden')
+            elif self.is_msvc:
+                compile_args.append('/EHsc')
             ext.extra_compile_args = compile_args + ext.extra_compile_args
         super().build_extensions()
 
