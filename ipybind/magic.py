@@ -7,7 +7,9 @@ import imp
 import os
 import sys
 import sysconfig
+import tempfile
 
+from distutils.errors import CompileError
 from distutils.file_util import copy_file
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
@@ -24,6 +26,24 @@ def cache_dir():
 
 
 class BuildExt(build_ext):
+    def has_flag(self, flag):
+        with tempfile.NamedTemporaryFile('w', suffix='.cpp') as f:
+            f.write('int main() { return 0; }')
+            try:
+                self.compiler.compile([f.name], extra_postargs=[flag])
+            except CompileError:
+                return False
+        return True
+
+    def build_extensions(self):
+        opts = []
+        if self.compiler.compiler_type == 'unix':
+            if self.has_flag('-fvisibility=hidden'):
+                opts.append('-fvisibility=hidden')
+        for ext in self.extensions:
+            ext.extra_compile_args.extend(opts)
+        super().build_extensions()
+
     def copy_extensions_to_source(self):
         for ext in self.extensions:
             filename = self.get_ext_filename(self.get_ext_fullname(ext.name))
