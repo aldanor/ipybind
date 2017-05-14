@@ -3,6 +3,8 @@
 import contextlib
 import sys
 
+from IPython import get_ipython
+
 from ipybind.ext.wurlitzer import Wurlitzer
 
 _fwd = None
@@ -23,7 +25,7 @@ class Forwarder(Wurlitzer):
 @contextlib.contextmanager
 def forward(handler=None):
     global _fwd
-    if _fwd is None:
+    if _fwd is None and get_ipython().has_trait('kernel'):
         with Forwarder(handler=handler):
             yield
     else:
