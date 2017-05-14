@@ -5,6 +5,7 @@ import functools
 import hashlib
 import imp
 import os
+import re
 import sys
 import sysconfig
 import tempfile
@@ -156,6 +157,13 @@ class Pybind11Magics(Magics):
             ]
         )
 
+    def forward_handler(self, source):
+        def handler(data):
+            data = data.replace(source, '<source>')
+            data = re.sub(r'^/.+/(pybind11/[\w_]+\.h:)', r'\1', data, flags=re.MULTILINE)
+            return data
+        return handler
+
     def build_module(self, module, source, args):
         with self.with_env(**{'CC': args.cc, 'CXX': args.cxx}):
             workdir = os.path.join(cache_dir(), module)
@@ -164,8 +172,7 @@ class Pybind11Magics(Magics):
             script_args += ['build_ext', '--inplace', '--build-temp', workdir]
             if args.compiler is not None:
                 script_args += ['--compiler', args.compiler]
-            handler = lambda s: s.replace(source, '<source>')
-            with forward(handler):
+            with forward(self.forward_handler(source)):
                 setup(
                     name=module,
                     ext_modules=[self.make_extension(module, source, args)],
