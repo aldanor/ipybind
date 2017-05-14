@@ -2,6 +2,7 @@
 
 import functools
 import os
+import shlex
 import sysconfig
 
 from IPython import get_ipython
@@ -30,3 +31,14 @@ def ext_suffix():
 def ext_path(*path):
     """Return an absolute path given a relative path within cache directory."""
     return os.path.join(cache_dir(), *path)
+
+
+def split_args(args):
+    """Unquote arguments in the list using `shlex.split`."""
+    if not args:
+        return []
+    result = []
+    for arg in args:
+        for s in shlex.split(arg):
+            result.extend(shlex.split(s))
+    return result

@@ -17,7 +17,7 @@ from setuptools.command.build_ext import build_ext
 from IPython.core.magic import Magics, magics_class, cell_magic, line_magic, on_off
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 
-from ipybind.common import ext_suffix, ext_path, is_kernel
+from ipybind.common import ext_suffix, ext_path, is_kernel, split_args
 from ipybind.stream import forward, start_forwarding, stop_forwarding, suppress
 
 
@@ -85,6 +85,8 @@ class Pybind11Magics(Magics):
               help='Set CXX environment variable.')
     @argument('--compiler',
               help='Pass --compiler to distutils.')
+    @argument('-c', '--compile-args', action='append', default=[], metavar='ARGS',
+              help='Extra flags to pass to the compiler.')
     @cell_magic
     def pybind11(self, line, cell):
         """
@@ -182,7 +184,7 @@ class Pybind11Magics(Magics):
             sources=[source],
             include_dirs=include_dirs,
             library_dirs=[],
-            extra_compile_args=[],
+            extra_compile_args=split_args(args.compile_args),
             extra_link_args=[],
             libraries=[],
             language='c++',
