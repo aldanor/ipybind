@@ -47,6 +47,8 @@ class Pybind11Magics(Magics):
               help='Set CC environment variable.')
     @argument('--cxx',
               help='Set CXX environment variable.')
+    @argument('--compiler',
+              help='Pass --compiler to distutils.')
     @cell_magic
     def pybind11(self, line, cell):
         """
@@ -138,6 +140,8 @@ class Pybind11Magics(Magics):
             os.makedirs(workdir, exist_ok=True)
             script_args = ['-v' if args.verbose else '-q']
             script_args += ['build_ext', '--inplace', '--build-temp', workdir]
+            if args.compiler is not None:
+                script_args += ['--compiler', args.compiler]
             setup(
                 name=module,
                 ext_modules=[self.make_extension(module, source, args)],
