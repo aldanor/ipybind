@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*_
 
+import contextlib
 import functools
 import hashlib
 import imp
@@ -42,6 +43,10 @@ class Pybind11Magics(Magics):
               help='One of: c++11, c++14 or c++17. Default: c++14.')
     @argument('--prefix-include', action='store_true',
               help='Add $PREFIX/include to include path.')
+    @argument('--cc',
+              help='Set CC environment variable.')
+    @argument('--cxx',
+              help='Set CXX environment variable.')
     @cell_magic
     def pybind11(self, line, cell):
         """
@@ -85,6 +90,23 @@ class Pybind11Magics(Magics):
     def ext_suffix(self):
         return sysconfig.get_config_var('EXT_SUFFIX') or sysconfig.get_config_var('SO')
 
+    @contextlib.contextmanager
+    def with_env(self, **env_vars):
+        env_vars = {k: v for k, v in env_vars.items() if v is not None}
+        env = os.environ.copy()
+        for k, v in env_vars.items():
+            os.environ[k] = v
+        try:
+            yield
+        except:
+            raise
+        finally:
+            for k in env_vars:
+                if k not in env:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = env[k]
+
     def make_extension(self, module, source, args):
         include_dirs = [os.path.dirname(__file__)]
         try:
@@ -111,16 +133,17 @@ class Pybind11Magics(Magics):
         )
 
     def build_module(self, module, source, args):
-        workdir = os.path.join(cache_dir(), module)
-        os.makedirs(workdir, exist_ok=True)
-        script_args = ['-v' if args.verbose else '-q']
-        script_args += ['build_ext', '--inplace', '--build-temp', workdir]
-        setup(
-            name=module,
-            ext_modules=[self.make_extension(module, source, args)],
-            script_args=script_args,
-            cmdclass={'build_ext': Pybind11BuildExt}
-        )
+        with self.with_env(**{'CC': args.cc, 'CXX': args.cxx}):
+            workdir = os.path.join(cache_dir(), module)
+            os.makedirs(workdir, exist_ok=True)
+            script_args = ['-v' if args.verbose else '-q']
+            script_args += ['build_ext', '--inplace', '--build-temp', workdir]
+            setup(
+                name=module,
+                ext_modules=[self.make_extension(module, source, args)],
+                script_args=script_args,
+                cmdclass={'build_ext': Pybind11BuildExt}
+            )
 
     def import_module(self, module, libfile):
         mod = imp.load_dynamic(module, libfile)
