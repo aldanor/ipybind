@@ -16,11 +16,11 @@ from distutils.file_util import copy_file
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
-from IPython.core.magic import Magics, magics_class, cell_magic
+from IPython.core.magic import Magics, magics_class, cell_magic, line_magic, on_off
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 from IPython.paths import get_ipython_cache_dir
 
-from ipybind.stream import forward
+from ipybind.stream import forward, start_forwarding, stop_forwarding
 
 
 @functools.lru_cache()
@@ -94,6 +94,29 @@ class Pybind11Magics(Magics):
             source = self.save_source(code, module)
             self.build_module(module, source, args)
         self.import_module(module, libfile)
+
+    @line_magic
+    def pybind11_capture(self, parameter_s=''):
+        """
+        Control the automatic capturing of C++ stdout and stderr streams.
+
+        To enable:  `%pybind11_capture 1` or `%pybind11_capture on`.
+        To disable: `%pybind11_capture 0` or `%pybind11_capture off`.
+        To toggle:  `%pybind11_capture`.
+        """
+
+        p = parameter_s.strip().lower()
+        if p:
+            try:
+                capture = {'off': 0, '0': 0, 'on': 1, '1': 1}[p]
+            except KeyError:
+                print('Incorrect argument. Use on/1, off/0, or nothing for a toggle.')
+                return
+        else:
+            capture = not getattr(self.shell, 'pybind11_capture', False)
+        self.shell.pybind11_capture = capture
+        (start_forwarding if capture else stop_forwarding)()
+        print('C++ stdout/stderr capturing has been turned', on_off(capture))
 
     def compute_hash(self, line, cell):
         key = cell, line, sys.version_info, sys.executable
