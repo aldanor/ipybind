@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*_
 
 import contextlib
-import functools
 import hashlib
 import imp
 import os
@@ -18,15 +17,9 @@ from setuptools.command.build_ext import build_ext
 
 from IPython.core.magic import Magics, magics_class, cell_magic, line_magic, on_off
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
-from IPython.paths import get_ipython_cache_dir
 
+from ipybind.common import cache_dir
 from ipybind.stream import forward, start_forwarding, stop_forwarding
-
-
-@functools.lru_cache()
-def cache_dir():
-    root = os.path.abspath(os.path.expanduser(get_ipython_cache_dir()))
-    return os.path.join(root, 'pybind11')
 
 
 class BuildExt(build_ext):

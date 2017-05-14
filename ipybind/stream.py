@@ -3,8 +3,7 @@
 import contextlib
 import sys
 
-from IPython import get_ipython
-
+from ipybind.common import is_kernel
 from ipybind.ext.wurlitzer import Wurlitzer
 
 _fwd = None
@@ -25,7 +24,7 @@ class Forwarder(Wurlitzer):
 @contextlib.contextmanager
 def forward(handler=None):
     global _fwd
-    if _fwd is None and get_ipython().has_trait('kernel'):
+    if _fwd is None and is_kernel():
         with Forwarder(handler=handler):
             yield
     else:
