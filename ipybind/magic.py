@@ -23,7 +23,7 @@ def cache_dir():
     return os.path.join(root, 'pybind11')
 
 
-class Pybind11BuildExt(build_ext):
+class BuildExt(build_ext):
     def copy_extensions_to_source(self):
         for ext in self.extensions:
             filename = self.get_ext_filename(self.get_ext_fullname(ext.name))
@@ -146,7 +146,7 @@ class Pybind11Magics(Magics):
                 name=module,
                 ext_modules=[self.make_extension(module, source, args)],
                 script_args=script_args,
-                cmdclass={'build_ext': Pybind11BuildExt}
+                cmdclass={'build_ext': BuildExt}
             )
 
     def import_module(self, module, libfile):
