@@ -23,15 +23,21 @@ import sys
 import threading
 import warnings
 
-libc = ctypes.CDLL(None)
-
 try:
-    c_stdout_p = ctypes.c_void_p.in_dll(libc, 'stdout')
-    c_stderr_p = ctypes.c_void_p.in_dll(libc, 'stderr')
-except ValueError:  # pragma: no cover
-    # libc.stdout is has a funny name on OS X
-    c_stdout_p = ctypes.c_void_p.in_dll(libc, '__stdoutp')  # pragma: no cover
-    c_stderr_p = ctypes.c_void_p.in_dll(libc, '__stderrp')  # pragma: no cover
+    libc = ctypes.CDLL(None)
+except TypeError:
+    libc = None
+
+if libc:
+    try:
+        c_stdout_p = ctypes.c_void_p.in_dll(libc, 'stdout')
+        c_stderr_p = ctypes.c_void_p.in_dll(libc, 'stderr')
+    except ValueError:  # pragma: no cover
+        # libc.stdout is has a funny name on OS X
+        c_stdout_p = ctypes.c_void_p.in_dll(libc, '__stdoutp')  # pragma: no cover
+        c_stderr_p = ctypes.c_void_p.in_dll(libc, '__stderrp')  # pragma: no cover
+else:
+    c_stdout_p = c_stderr_p = None
 
 STDOUT = 2
 PIPE = 3
