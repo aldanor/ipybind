@@ -9,6 +9,7 @@ import sys
 import tempfile
 import warnings
 
+import distutils.log
 from distutils.errors import CompileError
 from distutils.file_util import copy_file
 from setuptools import setup, Extension
@@ -30,11 +31,23 @@ class BuildExt(build_ext):
     def is_msvc(self):
         return self.compiler.compiler_type == 'msvc'
 
+    @contextlib.contextmanager
+    def silence(self):
+        verbose = self.compiler.verbose
+        self.compiler.verbose = 0
+        level = distutils.log.set_threshold(5)
+        try:
+            with suppress():
+                yield
+        finally:
+            self.compiler.verbose = verbose
+            distutils.log.set_threshold(level)
+
     def has_flag(self, flag):
         with tempfile.NamedTemporaryFile('w', suffix='.cpp') as f:
             f.write('int main() { return 0; }')
             try:
-                with suppress():
+                with self.silence():
                     self.compiler.compile([f.name], extra_postargs=[flag])
             except CompileError:
                 return False
