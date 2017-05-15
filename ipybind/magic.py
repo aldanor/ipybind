@@ -166,8 +166,6 @@ class Pybind11Magics(Magics):
             os.environ[k] = v
         try:
             yield
-        except:
-            raise
         finally:
             for k in env_vars:
                 if k not in env:
