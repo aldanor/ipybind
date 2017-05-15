@@ -33,6 +33,18 @@ def ext_path(*path):
     return os.path.join(cache_dir(), *path)
 
 
+def pybind11_get_include():
+    """Get pybind11 include paths if it's installed as a Python package."""
+    try:
+        import pybind11
+        try:
+            return [pybind11.get_include(True), pybind11.get_include(False)]
+        except AttributeError:
+            return []
+    except ImportError:
+        return []
+
+
 def split_args(args):
     """Unquote arguments in the list using `shlex.split`."""
     if not args:

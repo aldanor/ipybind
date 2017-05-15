@@ -18,7 +18,7 @@ from setuptools.command.build_ext import build_ext
 from IPython.core.magic import Magics, magics_class, cell_magic, line_magic, on_off
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 
-from ipybind.common import ext_suffix, ext_path, is_kernel, split_args
+from ipybind.common import ext_suffix, ext_path, is_kernel, split_args, pybind11_get_include
 from ipybind.stream import forward, start_forwarding, stop_forwarding, suppress
 
 
@@ -202,11 +202,7 @@ class Pybind11Magics(Magics):
 
     def make_extension(self, module, source, args):
         include_dirs = [os.path.dirname(__file__)]
-        try:
-            import pybind11
-            include_dirs.append(pybind11.get_include())
-        except ImportError:
-            pass
+        include_dirs += pybind11_get_include()
         if args.prefix_include:
             include_dirs.append(os.path.join(sys.prefix, 'include'))
         extension = Extension(
