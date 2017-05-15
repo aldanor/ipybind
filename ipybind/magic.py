@@ -75,15 +75,21 @@ class BuildExt(build_ext):
             self.remove_flag('-Wstrict-prototypes')  # may be an invalid flag on gcc
         for ext in self.extensions:
             compile_args = [self.cpp_flag(ext.args.std)]
-            if self.is_unix:
+            link_args = []
+            if self.is_unix:  # gcc / clang
                 if self.has_flag('-fvisibility=hidden'):
-                    # Set the default symbol visibility to hidden to obtain smaller binaries
+                    # set the default symbol visibility to hidden to obtain smaller binaries
                     compile_args.append('-fvisibility=hidden')
-            elif self.is_msvc:
+                if self.has_flag('-flto'):
+                    # enable link-time optimization if available
+                    compile_args.append('-flto')
+                    link_args.append('-flto')
+            elif self.is_msvc:  # msvc
                 compile_args.append('/MP')      # enable multithreaded builds
                 compile_args.append('/bigobj')  # because of 64k addressable sections limit
                 compile_args.append('/EHsc')    # catch synchronous C++ exceptions only
             ext.extra_compile_args = compile_args + ext.extra_compile_args
+            ext.extra_link_args = link_args + ext.extra_link_args
         super().build_extensions()
 
     def copy_extensions_to_source(self):
