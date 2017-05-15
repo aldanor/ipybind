@@ -64,7 +64,15 @@ class BuildExt(build_ext):
                 sys.exit('Unsupported compiler: at least C++11 support is required')
         return flag + std
 
+    def remove_flag(self, flag):
+        for target in ('compiler', 'compiler_so'):
+            cmd = getattr(self.compiler, target)
+            if flag in cmd:
+                cmd.remove(flag)
+
     def build_extensions(self):
+        if self.is_unix:
+            self.remove_flag('-Wstrict-prototypes')  # may be an invalid flag on gcc
         for ext in self.extensions:
             compile_args = [self.cpp_flag(ext.args.std)]
             if self.is_unix:
