@@ -56,9 +56,12 @@ class BuildExt(build_ext):
             compile_args = [self.cpp_flag(ext.args.std)]
             if self.is_unix:
                 if self.has_flag('-fvisibility=hidden'):
+                    # Set the default symbol visibility to hidden to obtain smaller binaries
                     compile_args.append('-fvisibility=hidden')
             elif self.is_msvc:
-                compile_args.append('/EHsc')
+                compile_args.append('/MP')      # enable multithreaded builds
+                compile_args.append('/bigobj')  # because of 64k addressable sections limit
+                compile_args.append('/EHsc')    # catch synchronous C++ exceptions only
             ext.extra_compile_args = compile_args + ext.extra_compile_args
         super().build_extensions()
 
