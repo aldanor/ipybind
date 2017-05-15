@@ -53,16 +53,26 @@ class BuildExt(build_ext):
                 return False
         return True
 
-    def cpp_flag(self, std):
-        flag = '/std:' if self.is_msvc else '-std='
-        if std is None:
-            if self.has_flag(flag + 'c++14'):
-                std = 'c++14'
-            elif self.has_flag(flag + 'c++11'):
-                std = 'c++11'
-            else:
-                sys.exit('Unsupported compiler: at least C++11 support is required')
-        return flag + std
+    def std_flags(self, std):
+        if self.is_msvc:
+            if std == 'c++11':  # cl.exe is always at least C++11
+                return []
+            elif std is not None:
+                if not self.has_flag('/std:' + std):
+                    sys.exit('Compiler does not seem to support ' + std.upper())
+                return ['/std:' + std]
+            elif self.has_flag('/std:c++14'):
+                return ['/std:c++14']
+            return []
+        if std is not None:
+            if not self.has_flag('-std=' + std):
+                sys.exit('Compiler does not seem to support ' + std.upper())
+            return ['-std=' + std]
+        elif self.has_flag('-std=c++14'):
+            return ['-std=c++14']
+        elif self.has_flag('-std=c++11'):
+            return ['-std=c++11']
+        sys.exit('Unsupported compiler: at least C++11 support is required')
 
     def remove_flag(self, flag):
         for target in ('compiler', 'compiler_so'):
@@ -74,7 +84,7 @@ class BuildExt(build_ext):
         if self.is_unix:
             self.remove_flag('-Wstrict-prototypes')  # may be an invalid flag on gcc
         for ext in self.extensions:
-            compile_args = [self.cpp_flag(ext.args.std)]
+            compile_args = self.std_flags(ext.args.std)
             link_args = []
             if self.is_unix:  # gcc / clang
                 if self.has_flag('-fvisibility=hidden'):
