@@ -117,7 +117,7 @@ class Pybind11Magics(Magics):
               help='Force recompilation of the module.')
     @argument('-v', '--verbose', action='store_true',
               help='Display compilation output.')
-    @argument('-std', choices=['c++11', 'c++14', 'c++17'],
+    @argument('-std', choices=['c++11', 'c++14', 'c++1z', 'c++17'],
               help='C++ standard, defaults to C++14 if available.')
     @argument('-i', '--prefix-include', action='store_true',
               help='Add $PREFIX/include to include path.')
