@@ -16,7 +16,6 @@ __all__ = [
 
 from contextlib import contextmanager
 import ctypes
-from fcntl import fcntl, F_GETFL, F_SETFL
 import io
 import os
 import select
@@ -74,6 +73,8 @@ class Wurlitzer:
         self._handlers['stdout'] = self._handle_stdout
 
     def _setup_pipe(self, name):
+        from fcntl import fcntl, F_GETFL, F_SETFL
+
         real_fd = getattr(sys, '__%s__' % name).fileno()
         save_fd = os.dup(real_fd)
         self._save_fds[name] = save_fd

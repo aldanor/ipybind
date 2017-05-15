@@ -3,6 +3,11 @@
 import contextlib
 import sys
 
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
+
 from ipybind.common import is_kernel
 from ipybind.ext.wurlitzer import Wurlitzer
 
@@ -28,14 +33,17 @@ class Forwarder(Wurlitzer):
 
 @contextlib.contextmanager
 def suppress():
-    with Forwarder(handler=lambda _: None):
+    if fcntl:
+        with Forwarder(handler=lambda _: None):
+            yield
+    else:
         yield
 
 
 @contextlib.contextmanager
 def forward(handler=None):
     global _fwd
-    if _fwd is None and is_kernel():
+    if _fwd is None and is_kernel() and fcntl:
         with Forwarder(handler=handler):
             yield
     else:
@@ -44,13 +52,15 @@ def forward(handler=None):
 
 def start_forwarding(handler=None):
     global _fwd
-    if _fwd is None:
-        _fwd = Forwarder(handler=handler)
-    _fwd.__enter__()
+    if fcntl:
+        if _fwd is None:
+            _fwd = Forwarder(handler=handler)
+        _fwd.__enter__()
 
 
 def stop_forwarding(handler=None):
     global _fwd
-    if _fwd is not None:
-        _fwd.__exit__(None, None, None)
-        _fwd = None
+    if fcntl:
+        if _fwd is not None:
+            _fwd.__exit__(None, None, None)
+            _fwd = None
