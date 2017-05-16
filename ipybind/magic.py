@@ -142,7 +142,10 @@ class Pybind11Magics(Magics):
     def forward_handler(self, source):
         def handler(data):
             data = data.replace(source, '<source>')
-            data = re.sub(r'^/.+/(pybind11/[\w_]+\.h:)', r'\1', data, flags=re.MULTILINE)
+            data = re.sub(r'^/.+/(pybind11/[\w_]+\.h:)', r'\1',
+                          data, flags=re.MULTILINE)
+            data = re.sub(r'^/.+/pybind11_preamble.h:', 'pybind11_preamble.h:',
+                          data, flags=re.MULTILINE)
             return data
         return handler
 
