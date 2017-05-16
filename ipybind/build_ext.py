@@ -11,7 +11,7 @@ import distutils.log
 import setuptools.command.build_ext
 
 from ipybind.common import ext_path
-from ipybind.stream import suppress
+from ipybind.spawn import spawn_capture
 
 
 class build_ext(setuptools.command.build_ext.build_ext):
@@ -29,7 +29,7 @@ class build_ext(setuptools.command.build_ext.build_ext):
         self.compiler.verbose = 0
         level = distutils.log.set_threshold(5)
         try:
-            with suppress():
+            with spawn_capture():
                 yield
         finally:
             self.compiler.verbose = verbose
