@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from ipybind.spawn import patch_spawn
+patch_spawn()
+del patch_spawn
+
 __version__ = '0.1.0'
 
 

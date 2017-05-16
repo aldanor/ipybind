@@ -9,6 +9,25 @@ import distutils.errors
 import distutils.spawn
 
 
+class inject:
+    def __init__(self, fn):
+        self.orig = fn
+        self.set(fn)
+
+    def set(self, fn):
+        self.fn = fn
+
+    def reset(self):
+        self.fn = self.orig
+
+    def __call__(self, *args, **kwargs):
+        return self.fn(*args, **kwargs)
+
+
+def patch_spawn():
+    distutils.spawn.spawn = inject(distutils.spawn.spawn)
+
+
 def spawn_fn(stdout, stderr):
     stdout = stdout and subprocess.PIPE or subprocess.DEVNULL
     stderr = stderr and subprocess.PIPE or subprocess.DEVNULL
@@ -45,9 +64,8 @@ def spawn_fn(stdout, stderr):
 
 @contextlib.contextmanager
 def spawn_capture(stdout=False, stderr=False):
-    orig_spawn = distutils.spawn.spawn
-    distutils.spawn.spawn = spawn_fn(stdout, stderr)
+    distutils.spawn.spawn.set(spawn_fn(stdout, stderr))
     try:
         yield
     finally:
-        distutils.spawn.spawn = orig_spawn
+        distutils.spawn.spawn.reset()
