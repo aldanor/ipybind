@@ -119,7 +119,7 @@ class Pybind11Magics(Magics):
                     os.environ[k] = env[k]
 
     def make_extension(self, module, source, args):
-        include_dirs = [os.path.dirname(__file__)]
+        include_dirs = [os.path.join(os.path.dirname(__file__), 'include')]
         include_dirs += pybind11_get_include()
         if args.prefix_include:
             include_dirs.append(os.path.join(sys.prefix, 'include'))
