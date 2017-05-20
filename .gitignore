@@ -24,3 +24,5 @@ docs/_build/
 .python-version
 .env
 /*.ipynb
+foo*
+/test*.py
