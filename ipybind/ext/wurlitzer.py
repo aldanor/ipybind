@@ -21,6 +21,7 @@ import os
 import select
 import sys
 import threading
+import time
 import warnings
 
 try:
@@ -171,6 +172,7 @@ class Wurlitzer:
         # flush the underlying C buffers
         libc.fflush(c_stdout_p)
         libc.fflush(c_stderr_p)
+        time.sleep(0.005)  # a real cheesy way to avoid potential segfaults
         # close FDs, signaling output is complete
         for real_fd in self._real_fds.values():
             os.close(real_fd)
