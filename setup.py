@@ -17,7 +17,7 @@ setup(
     license='MIT',
     version=version,
     url='http://github.com/aldanor/ipybind',
-    packages=['ipybind'],
+    packages=['ipybind', 'ipybind.ext'],
     description='IPython and Jupyter integration for pybind11.',
     install_requires=['ipython', 'pybind11'],
     classifiers=[
