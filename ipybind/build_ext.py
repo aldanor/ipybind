@@ -29,7 +29,7 @@ class build_ext(setuptools.command.build_ext.build_ext):
         self.compiler.verbose = 0
         level = distutils.log.set_threshold(5)
         try:
-            with spawn_capture():
+            with spawn_capture('never'):
                 yield
         finally:
             self.compiler.verbose = verbose

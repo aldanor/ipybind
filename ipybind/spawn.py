@@ -28,10 +28,7 @@ def patch_spawn():
     distutils.spawn.spawn = inject(distutils.spawn.spawn)
 
 
-def spawn_fn(stdout, stderr):
-    stdout = stdout and subprocess.PIPE or subprocess.DEVNULL
-    stderr = stderr and subprocess.PIPE or subprocess.DEVNULL
-
+def spawn_fn(mode, fmt=None):
     def spawn(cmd, search_path=True, verbose=False, dry_run=False):
         cmd = list(cmd)
         executable = cmd[0]
@@ -40,12 +37,14 @@ def spawn_fn(stdout, stderr):
         if dry_run:
             return
         try:
-            p = subprocess.Popen([executable] + cmd[1:], stdout=stdout, stderr=stderr)
-            out, err = p.communicate()
-            if out is not None:
+            p = subprocess.Popen([executable] + cmd[1:],
+                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            out, _ = p.communicate()
+            if mode == 'always' or (mode == 'on_error' and p.returncode != 0):
+                if fmt is not None:
+                    out = fmt(out.decode('utf-8')).encode('utf-8')
                 sys.stdout.write(out)
-            if err is not None:
-                sys.stderr.write(err)
+                sys.stdout.flush()
             if p.returncode != 0:
                 raise subprocess.CalledProcessError
         except OSError as e:
@@ -56,13 +55,12 @@ def spawn_fn(stdout, stderr):
             raise distutils.errors.DistutilsExecError(
                 'command {!r} failed'
                 .format(executable)) from None
-
     return spawn
 
 
 @contextlib.contextmanager
-def spawn_capture(stdout=False, stderr=False):
-    distutils.spawn.spawn.set(spawn_fn(stdout, stderr))
+def spawn_capture(mode='on_error', fmt=None):
+    distutils.spawn.spawn.set(spawn_fn(mode, fmt=fmt))
     try:
         yield
     finally:
