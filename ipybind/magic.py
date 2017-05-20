@@ -50,8 +50,8 @@ class Pybind11Magics(Magics):
 
         line = line.strip().rstrip(';')
         args = parse_argstring(self.pybind11, line)
-        module = 'pybind11_{}'.format(self.compute_hash(line, cell))
         code = self.format_code(cell)
+        module = 'pybind11_{}'.format(self.compute_hash(code, args))
         libfile = ext_path(module + ext_suffix())
         need_rebuild = not os.path.isfile(libfile) or args.force
         if need_rebuild:
@@ -86,9 +86,14 @@ class Pybind11Magics(Magics):
         (start_forwarding if capture else stop_forwarding)()
         print('C++ stdout/stderr capturing has been turned', on_off(capture))
 
-    def compute_hash(self, line, cell):
-        key = cell, line, sys.version_info, sys.executable
-        return hashlib.md5(str(key).encode('utf-8')).hexdigest()[:7]
+    def compute_hash(self, code, args):
+        args = vars(args).copy()
+        args['version_info'] = sys.version_info
+        args['executable'] = sys.executable
+        args['code'] = code
+        args.pop('verbose', None)
+        key = str(sorted(args.items()))
+        return hashlib.md5(key.encode('utf-8')).hexdigest()[:7]
 
     def format_code(self, cell):
         code = cell.replace('PYBIND11_PLUGIN', '_PYBIND11_PLUGIN')
