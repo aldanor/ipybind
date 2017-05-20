@@ -167,6 +167,8 @@ class Pybind11Magics(Magics):
             os.makedirs(workdir, exist_ok=True)
             script_args = ['-v' if args.verbose else '-q']
             script_args += ['build_ext', '--inplace', '--build-temp', workdir]
+            if args.force:
+                script_args.append('--force')
             if args.compiler is not None:
                 script_args += ['--compiler', args.compiler]
             with forward(self.forward_handler(source)):
