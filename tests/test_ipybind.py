@@ -29,13 +29,13 @@ def module(code):
 
 
 def test_pybind11_capture(ip, capsys):
-    ip.run_line_magic('pybind11_capture', '-f')
+    ip.run_line_magic('pybind11_capture', '')
     out, _ = capsys.readouterr()
     assert 'capturing is not available' in out
 
 
 def test_import_all(ip):
-    ip.run_cell_magic('pybind11', '', module("""
+    ip.run_cell_magic('pybind11', '-f', module("""
         m.attr("x") = py::cast(1);
         m.attr("_y") = py::cast(2);
         m.attr("__z") = py::cast(3);
