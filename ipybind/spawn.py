@@ -37,8 +37,6 @@ def spawn_fn(stdout, stderr):
         executable = cmd[0]
         if search_path:
             executable = distutils.spawn.find_executable(executable) or executable
-        if os.name == 'nt':
-            cmd = distutils.spawn._nt_quote_args(cmd)
         if dry_run:
             return
         try:
