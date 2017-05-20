@@ -93,11 +93,12 @@ class Pybind11Magics(Magics):
         args['executable'] = sys.executable
         args['code'] = code
         args.pop('verbose', None)
-        if args.pop('force', False) and os.name == 'nt':
+        if args.pop('force', False):
             # Force-rebuilding changes the hash on Windows; we have to do that because
             # python.exe keeps open handles to the loaded .pyd files, and we can't
             # overwrite them safely. On Linux / macOS overwriting the .so files
-            # seems to work fine, so we ignore --force flag entirely there.
+            # seems to work fine, however importing the module with the same name as
+            # already imported module may be flaky, so we have to make it unique too.
             args['timestamp'] = int(round(time.time() * 1e6))
         key = str(sorted(args.items()))
         return hashlib.md5(key.encode('utf-8')).hexdigest()[:7]

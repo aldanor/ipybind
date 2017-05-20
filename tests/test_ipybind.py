@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
 import pytest
 import time
 
@@ -70,8 +69,5 @@ def test_recompile(ip):
     assert f() == 42
 
     ip.run_cell_magic('pybind11', '', code)
-    if os.name == 'nt':
-        assert f is not ip.user_ns['f']
-    else:
-        assert f is ip.user_ns['f']
+    assert f is not ip.user_ns['f']
     assert ip.user_ns['f']() == 42
