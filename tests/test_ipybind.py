@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import os
 import pytest
+import time
 
 from IPython.testing.globalipapp import get_ipython
 from IPython.core.history import HistoryManager
@@ -46,16 +48,30 @@ def test_import_all(ip):
 
 
 def test_recompile(ip):
-    code = module("""
+    mk_code = lambda: module("""
         m.def("f", []() { return 42; });
-    """)
-    ip.run_cell_magic('pybind11', '-v', code)
+    // """ + str(time.time()))
+
+    code = mk_code()
+    ip.run_cell_magic('pybind11', '', code)
     f = ip.user_ns['f']
     assert f() == 42
 
-    ip.run_cell_magic('pybind11', '-v', code)
+    ip.run_cell_magic('pybind11', ';', code)
     assert f is ip.user_ns['f']
 
-    ip.run_cell_magic('pybind11', '-fv', code)
+    ip.run_cell_magic('pybind11', '-f', code)
     assert f is not ip.user_ns['f']
+    assert ip.user_ns['f']() == 42
+
+    code = mk_code()
+    ip.run_cell_magic('pybind11', '-f', code)
+    f = ip.user_ns['f']
+    assert f() == 42
+
+    ip.run_cell_magic('pybind11', '', code)
+    if os.name == 'nt':
+        assert f is not ip.user_ns['f']
+    else:
+        assert f is ip.user_ns['f']
     assert ip.user_ns['f']() == 42
