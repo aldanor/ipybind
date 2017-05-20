@@ -152,16 +152,6 @@ class Pybind11Magics(Magics):
         extension.args = args
         return extension
 
-    def forward_handler(self, source):
-        def handler(data):
-            data = data.replace(source, '<source>')
-            data = re.sub(r'^/.+/(pybind11/[\w_]+\.h:)', r'\1',
-                          data, flags=re.MULTILINE)
-            data = re.sub(r'^/.+/pybind11_preamble.h:', 'pybind11_preamble.h:',
-                          data, flags=re.MULTILINE)
-            return data
-        return handler
-
     def build_module(self, module, source, args):
         with self.with_env(**{'CC': args.cc, 'CXX': args.cxx}):
             workdir = ext_path(module)
@@ -172,14 +162,13 @@ class Pybind11Magics(Magics):
                 script_args.append('--force')
             if args.compiler is not None:
                 script_args += ['--compiler', args.compiler]
-            with forward(self.forward_handler(source)):
-                warnings.filterwarnings('ignore', 'To exit')
-                setup(
-                    name=module,
-                    ext_modules=[self.make_extension(module, source, args)],
-                    script_args=script_args,
-                    cmdclass={'build_ext': build_ext}
-                )
+            warnings.filterwarnings('ignore', 'To exit')
+            setup(
+                name=module,
+                ext_modules=[self.make_extension(module, source, args)],
+                script_args=script_args,
+                cmdclass={'build_ext': build_ext}
+            )
 
     def import_module(self, module, libfile):
         mod = imp.load_dynamic(module, libfile)

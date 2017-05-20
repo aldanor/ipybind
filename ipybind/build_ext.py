@@ -2,6 +2,7 @@
 
 import contextlib
 import os
+import re
 import sys
 import tempfile
 
@@ -72,6 +73,18 @@ class build_ext(setuptools.command.build_ext.build_ext):
             if flag in cmd:
                 cmd.remove(flag)
 
+    def format_log(self, log):
+        for ext in self.extensions:
+            for source in ext.sources:
+                log = log.replace(source, '<source>')
+                basename = os.path.basename(source)
+                log = re.sub('^' + re.escape(basename) + r'\s+', '', log)
+        log = re.sub(r'^/.+/(pybind11/[\w_]+\.h:)', r'\1',
+                        log, flags=re.MULTILINE)
+        log = re.sub(r'^/.+/pybind11_preamble.h:', 'pybind11_preamble.h:',
+                        log, flags=re.MULTILINE)
+        return log
+
     def build_extensions(self):
         if self.is_unix:
             self.remove_flag('-Wstrict-prototypes')  # may be an invalid flag on gcc
@@ -92,7 +105,8 @@ class build_ext(setuptools.command.build_ext.build_ext):
                 compile_args.append('/EHsc')    # catch synchronous C++ exceptions only
             ext.extra_compile_args = compile_args + ext.extra_compile_args
             ext.extra_link_args = link_args + ext.extra_link_args
-        super().build_extensions()
+        with spawn_capture(self.verbose and 'always' or 'on_error', fmt=self.format_log):
+            super().build_extensions()
 
     def copy_extensions_to_source(self):
         for ext in self.extensions:
