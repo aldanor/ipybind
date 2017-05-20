@@ -31,14 +31,12 @@ def patch_spawn():
 def spawn_fn(mode, fmt=None):
     def spawn(cmd, search_path=True, verbose=False, dry_run=False):
         cmd = list(cmd)
-        executable = cmd[0]
         if search_path:
-            executable = distutils.spawn.find_executable(executable) or executable
+            cmd[0] = distutils.spawn.find_executable(cmd[0]) or cmd[0]
         if dry_run:
             return
         try:
-            p = subprocess.Popen([executable] + cmd[1:],
-                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             out, _ = p.communicate()
             if mode == 'always' or (mode == 'on_error' and p.returncode != 0):
                 if fmt is not None:
@@ -50,11 +48,11 @@ def spawn_fn(mode, fmt=None):
         except OSError as e:
             raise distutils.errors.DistutilsExecError(
                 'command {!r} failed with exit status {}: {}'
-                .format(executable, e.errno, e.strerror)) from None
+                .format(os.path.basename(cmd[0]), e.errno, e.strerror)) from None
         except:
             raise distutils.errors.DistutilsExecError(
                 'command {!r} failed'
-                .format(executable)) from None
+                .format(os.path.basename(cmd[0]))) from None
     return spawn
 
 
