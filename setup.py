@@ -20,6 +20,10 @@ setup(
     packages=['ipybind', 'ipybind.ext'],
     description='IPython and Jupyter integration for pybind11.',
     install_requires=['ipython', 'pybind11'],
+    include_package_data=True,
+    package_data={
+        'ipybind': ['include/*.h']
+    },
     classifiers=[
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
