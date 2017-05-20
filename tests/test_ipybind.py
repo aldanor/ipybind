@@ -43,3 +43,19 @@ def test_import_all(ip):
     assert ip.user_ns['x'] == 1
     assert ip.user_ns['_y'] == 2
     assert '__z' not in ip.user_ns
+
+
+def test_recompile(ip):
+    code = module("""
+        m.def("f", []() { return 42; });
+    """)
+    ip.run_cell_magic('pybind11', '-v', code)
+    f = ip.user_ns['f']
+    assert f() == 42
+
+    ip.run_cell_magic('pybind11', '-v', code)
+    assert f is ip.user_ns['f']
+
+    ip.run_cell_magic('pybind11', '-fv', code)
+    assert f is not ip.user_ns['f']
+    assert ip.user_ns['f']() == 42
