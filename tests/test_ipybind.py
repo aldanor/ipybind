@@ -20,7 +20,26 @@ def ip(kernel):
     return kernel
 
 
+def module(code):
+    return """PYBIND11_PLUGIN(test) {{
+        py::module m("test");
+        {}
+        return m.ptr();
+    }}""".format(code)
+
+
 def test_pybind11_capture(ip, capsys):
-    ip.run_line_magic('pybind11_capture', '')
+    ip.run_line_magic('pybind11_capture', '-f')
     out, _ = capsys.readouterr()
     assert 'capturing is not available' in out
+
+
+def test_import_all(ip):
+    ip.run_cell_magic('pybind11', '', module("""
+        m.attr("x") = py::cast(1);
+        m.attr("_y") = py::cast(2);
+        m.attr("__z") = py::cast(3);
+    """))
+    assert ip.user_ns['x'] == 1
+    assert ip.user_ns['_y'] == 2
+    assert '__z' not in ip.user_ns
