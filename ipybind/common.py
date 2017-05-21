@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import contextlib
 import functools
 import imp
 import os
@@ -58,3 +59,20 @@ def split_args(args):
         for s in shlex.split(arg):
             result.extend(shlex.split(s))
     return result
+
+
+@contextlib.contextmanager
+def with_env(**env_vars):
+    """Context manager for overriding environment variables."""
+    env_vars = {k: v for k, v in env_vars.items() if v is not None}
+    env = os.environ.copy()
+    for k, v in env_vars.items():
+        os.environ[k] = v
+    try:
+        yield
+    finally:
+        for k in env_vars:
+            if k not in env:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = env[k]

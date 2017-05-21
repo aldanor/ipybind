@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*_
 
-import contextlib
 import hashlib
 import imp
 import os
-import re
 import sys
 import time
 import warnings
@@ -15,7 +13,8 @@ from IPython.core.magic import Magics, magics_class, cell_magic, line_magic, on_
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 
 from ipybind.build_ext import build_ext
-from ipybind.common import ext_suffix, ext_path, is_kernel, split_args, pybind11_get_include
+from ipybind.common import (ext_suffix, ext_path, is_kernel, split_args,
+                            pybind11_get_include, with_env)
 from ipybind.stream import start_forwarding, stop_forwarding
 
 
@@ -115,21 +114,6 @@ class Pybind11Magics(Magics):
             f.write(code)
         return filename
 
-    @contextlib.contextmanager
-    def with_env(self, **env_vars):
-        env_vars = {k: v for k, v in env_vars.items() if v is not None}
-        env = os.environ.copy()
-        for k, v in env_vars.items():
-            os.environ[k] = v
-        try:
-            yield
-        finally:
-            for k in env_vars:
-                if k not in env:
-                    os.environ.pop(k, None)
-                else:
-                    os.environ[k] = env[k]
-
     def make_extension(self, module, source, args):
         include_dirs = []
         library_dirs = []
@@ -165,7 +149,7 @@ class Pybind11Magics(Magics):
         return extension
 
     def build_module(self, module, source, args):
-        with self.with_env(**{'CC': args.cc, 'CXX': args.cxx}):
+        with with_env(**{'CC': args.cc, 'CXX': args.cxx}):
             workdir = ext_path(module)
             os.makedirs(workdir, exist_ok=True)
             script_args = ['-v' if args.verbose else '-q']
