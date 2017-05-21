@@ -37,6 +37,10 @@ class Pybind11Magics(Magics):
               help='Extra flags to pass to the compiler.')
     @argument('-l', '--lib', action='append', default=[], metavar='LIB',
               help='Add libraries to link the extension against.')
+    @argument('-I', '--include', action='append', default=[], metavar='INCLUDE',
+              help='Add paths to the list of include directories.')
+    @argument('-L', '--libdir', action='append', default=[], metavar='LIBDIR',
+              help='Add paths to the list of library directories.')
     @cell_magic
     def pybind11(self, line, cell):
         """
@@ -134,12 +138,16 @@ class Pybind11Magics(Magics):
             include_dirs.append(os.path.join(conda_lib_root, 'include'))
             library_dirs.append(os.path.join(conda_lib_root, 'lib'))
 
+        # add user-specified include and library directories
+        include_dirs.extend(split_args(args.include))
+        library_dirs.extend(split_args(args.libdir))
+
         extension = Extension(
             name=module,
             sources=[source],
             include_dirs=include_dirs,
             library_dirs=library_dirs,
-            extra_compile_args=split_args(args.compile_args),
+            extra_compile_args=split_args(args.compile_args, recursive=True),
             extra_link_args=[],
             libraries=args.lib,
             language='c++',

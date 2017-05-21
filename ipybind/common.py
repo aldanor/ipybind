@@ -50,14 +50,14 @@ def pybind11_get_include():
         return []
 
 
-def split_args(args):
+def split_args(args, recursive=False):
     """Unquote arguments in the list using `shlex.split`."""
     if not args:
         return []
     result = []
     for arg in args:
         for s in shlex.split(arg):
-            result.extend(shlex.split(s))
+            result.extend(shlex.split(s) if recursive else [s])
     return result
 
 
