@@ -42,12 +42,12 @@ def spawn_fn(mode, fmt=None, log_commands=False):
             out, _ = p.communicate()
             if out and (mode == 'always' or (mode == 'on_error' and p.returncode != 0)):
                 if fmt is not None:
-                    out = fmt(out.decode('utf-8')).encode('utf-8')
-                sep = b'-' * 80 + b'\n'
+                    out = fmt(out.decode('utf-8'))
+                sep = '-' * 80 + '\n'
                 sys.stdout.write(sep)
                 sys.stdout.write(out)
-                if not out.endswith(b'\n'):
-                    sys.stdout.write(b'\n')
+                if not out.endswith('\n'):
+                    sys.stdout.write('\n')
                 sys.stdout.write(sep)
                 sys.stdout.flush()
             if p.returncode != 0:
