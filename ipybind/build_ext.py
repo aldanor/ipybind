@@ -105,7 +105,8 @@ class build_ext(setuptools.command.build_ext.build_ext):
                 compile_args.append('/EHsc')    # catch synchronous C++ exceptions only
             ext.extra_compile_args = compile_args + ext.extra_compile_args
             ext.extra_link_args = link_args + ext.extra_link_args
-        with spawn_capture(self.verbose and 'always' or 'on_error', fmt=self.format_log):
+        with spawn_capture(self.verbose and 'always' or 'on_error', fmt=self.format_log,
+                           log_commands=bool(self.verbose)):
             super().build_extensions()
 
     def copy_extensions_to_source(self):

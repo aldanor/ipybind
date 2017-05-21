@@ -28,13 +28,15 @@ def patch_spawn():
     distutils.spawn.spawn = inject(distutils.spawn.spawn)
 
 
-def spawn_fn(mode, fmt=None):
+def spawn_fn(mode, fmt=None, log_commands=False):
     def spawn(cmd, search_path=True, verbose=False, dry_run=False):
         cmd = list(cmd)
         if search_path:
             cmd[0] = distutils.spawn.find_executable(cmd[0]) or cmd[0]
         if dry_run:
             return
+        if log_commands:
+            distutils.log.info(' '.join(distutils.spawn._nt_quote_args(list(cmd))))
         try:
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             out, _ = p.communicate()
@@ -62,8 +64,8 @@ def spawn_fn(mode, fmt=None):
 
 
 @contextlib.contextmanager
-def spawn_capture(mode='on_error', fmt=None):
-    distutils.spawn.spawn.set(spawn_fn(mode, fmt=fmt))
+def spawn_capture(mode='on_error', fmt=None, log_commands=False):
+    distutils.spawn.spawn.set(spawn_fn(mode, fmt=fmt, log_commands=log_commands))
     try:
         yield
     finally:
