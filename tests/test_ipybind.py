@@ -103,7 +103,11 @@ def test_link_external(ip):
             compiler = distutils.ccompiler.new_compiler()
             distutils.sysconfig.customize_compiler(compiler)
             objects = compiler.compile([cpp])
-            compiler.link_shared_lib(objects, 'foo', lib_dir, target_lang='c++')
+            if os.name == 'nt':
+                linker = compiler.create_static_lib
+            else:
+                linker = compiler.link_shared_lib
+            linker(objects, 'foo', lib_dir, target_lang='c++')
 
         flags = '-f -I "{}" -L "{}" -l foo'.format(inc_dir, lib_dir)
         ip.run_cell_magic('pybind11', flags, """
