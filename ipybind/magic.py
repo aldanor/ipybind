@@ -28,8 +28,6 @@ class Pybind11Magics(Magics):
               help='Display compilation output.')
     @argument('-std', choices=['c++11', 'c++14', 'c++1z', 'c++17'],
               help='C++ standard, defaults to C++14 if available.')
-    @argument('-i', '--prefix-include', action='store_true',
-              help='Add $PREFIX/include to include path.')
     @argument('--cc',
               help='Set CC environment variable.')
     @argument('--cxx',
@@ -135,8 +133,6 @@ class Pybind11Magics(Magics):
     def make_extension(self, module, source, args):
         include_dirs = [os.path.join(os.path.dirname(__file__), 'include')]
         include_dirs += pybind11_get_include()
-        if args.prefix_include:
-            include_dirs.append(os.path.join(sys.prefix, 'include'))
         extension = Extension(
             name=module,
             sources=[source],
