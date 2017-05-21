@@ -51,7 +51,7 @@ def spawn_fn(mode, fmt=None, log_commands=False):
                 sys.stdout.write(sep)
                 sys.stdout.flush()
             if p.returncode != 0:
-                raise subprocess.CalledProcessError
+                raise subprocess.CalledProcessError(p.returncode, cmd)
         except OSError as e:
             raise distutils.errors.DistutilsExecError(
                 'command {!r} failed with exit status {}: {}'
