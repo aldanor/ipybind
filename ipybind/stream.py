@@ -32,15 +32,6 @@ class Forwarder(Wurlitzer):
 
 
 @contextlib.contextmanager
-def suppress():
-    if fcntl:
-        with Forwarder(handler=lambda _: None):
-            yield
-    else:
-        yield
-
-
-@contextlib.contextmanager
 def forward(handler=None):
     global _fwd
     if _fwd is None and is_kernel() and fcntl:
