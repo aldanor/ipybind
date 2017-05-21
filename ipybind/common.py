@@ -62,17 +62,17 @@ def split_args(args, recursive=False):
 
 
 @contextlib.contextmanager
-def with_env(**env_vars):
-    """Context manager for overriding environment variables."""
-    env_vars = {k: v for k, v in env_vars.items() if v is not None}
-    env = os.environ.copy()
-    for k, v in env_vars.items():
-        os.environ[k] = v
+def override_vars(target, **override):
+    """Context manager for overriding variables in an arbitrary dict."""
+    override = {k: v for k, v in override.items() if v is not None}
+    orig = target.copy()
+    for k, v in override.items():
+        target[k] = v
     try:
         yield
     finally:
-        for k in env_vars:
-            if k not in env:
-                os.environ.pop(k, None)
+        for k in override:
+            if k not in orig:
+                target.pop(k, None)
             else:
-                os.environ[k] = env[k]
+                target[k] = orig[k]

@@ -14,7 +14,7 @@ from IPython.core.magic_arguments import argument, magic_arguments, parse_argstr
 
 from ipybind.build_ext import build_ext
 from ipybind.common import (ext_suffix, ext_path, is_kernel, split_args,
-                            pybind11_get_include, with_env)
+                            pybind11_get_include, override_vars)
 from ipybind.stream import start_forwarding, stop_forwarding
 
 
@@ -159,7 +159,7 @@ class Pybind11Magics(Magics):
         return extension
 
     def build_module(self, module, source, args):
-        with with_env(**{'CC': args.cc, 'CXX': args.cxx}):
+        with override_vars(os.environ, **{'CC': args.cc, 'CXX': args.cxx}):
             workdir = ext_path(module)
             os.makedirs(workdir, exist_ok=True)
             script_args = ['-v' if args.verbose else '-q']
