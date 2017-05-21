@@ -27,10 +27,10 @@ def cache_dir():
 @functools.lru_cache()
 def ext_suffix():
     """Get extension suffix for C extensions on this platform."""
-    try:
-        return imp.get_suffixes()[0][0]  # normally, this should not fail
-    except:
-        return sysconfig.get_config_var('EXT_SUFFIX') or sysconfig.get_config_var('SO')
+    if os.name == 'nt':
+        return imp.get_suffixes()[0][0]
+    else:
+        return sysconfig.get_config_var('EXT_SUFFIX')
 
 
 def ext_path(*path):
