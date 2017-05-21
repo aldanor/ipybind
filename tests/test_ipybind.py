@@ -1,10 +1,18 @@
 # -*- coding: utf-8 -*-
 
+import os
 import pytest
+import tempfile
+import sys
 import time
+
+import distutils.ccompiler
+import distutils.sysconfig
 
 from IPython.testing.globalipapp import get_ipython
 from IPython.core.history import HistoryManager
+
+from ipybind.common import override_vars
 
 
 @pytest.fixture(scope='session')
@@ -71,3 +79,40 @@ def test_recompile(ip):
     ip.run_cell_magic('pybind11', '', code)
     assert f is not ip.user_ns['f']
     assert ip.user_ns['f']() == 42
+
+
+def test_link_external(ip):
+    with tempfile.TemporaryDirectory() as root_dir:
+        lib_dir = os.path.join(root_dir, 'lib dir')
+        os.makedirs(lib_dir)
+        cpp = os.path.join(lib_dir, 'foo.cpp')
+        with open(cpp, 'w') as f:
+            f.write('namespace baz { int foo(int x) { return x * 10; } }\n')
+        inc_dir = os.path.join(root_dir, 'inc dir')
+        os.makedirs(inc_dir)
+        hdr = os.path.join(inc_dir, 'foo.h')
+        with open(hdr, 'w') as f:
+            f.write('namespace baz { int foo(int x); }\n')
+
+        config = distutils.sysconfig.get_config_vars()
+        override = {}
+        if sys.platform == 'darwin':
+            override['LDSHARED'] = config.get('LDSHARED', '').replace('-bundle', '-dynamiclib')
+        with override_vars(config, **override):
+            compiler = distutils.ccompiler.new_compiler()
+            distutils.sysconfig.customize_compiler(compiler)
+            objects = compiler.compile([cpp])
+            compiler.link_shared_lib(objects, 'foo', lib_dir, target_lang='c++')
+
+        flags = '-f -I "{}" -L "{}" -l foo'.format(inc_dir, lib_dir)
+        ip.run_cell_magic('pybind11', flags, """
+        #include <foo.h>
+
+        PYBIND11_PLUGIN(foo) {
+            py::module m("foo");
+            m.def("bar", [](int x) { return baz::foo(x); });
+            return m.ptr();
+        }
+        """)
+
+        assert ip.user_ns['bar'](42) == 420
