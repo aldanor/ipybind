@@ -16,7 +16,7 @@ from IPython.core.magic_arguments import argument, magic_arguments, parse_argstr
 
 from ipybind.build_ext import build_ext
 from ipybind.common import ext_suffix, ext_path, is_kernel, split_args, pybind11_get_include
-from ipybind.stream import forward, start_forwarding, stop_forwarding
+from ipybind.stream import start_forwarding, stop_forwarding
 
 
 @magics_class
