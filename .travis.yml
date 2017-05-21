@@ -1,0 +1,46 @@
+language: python
+sudo: false
+dist: trusty
+cache: pip
+matrix:
+  include:
+    - {python: 3.4, env: [TOXENV=py34], os: linux}
+    - {python: 3.5, env: [TOXENV=py35], os: linux}
+    - {python: 3.6, env: [TOXENV=py36], os: linux}
+    - {python: 3.4, env: [TOXENV=py34], os: osx, language: generic}
+    - {python: 3.5, env: [TOXENV=py35], os: osx, language: generic}
+    - {python: 3.6, env: [TOXENV=py36], os: osx, language: generic}
+install:
+  - |
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+      brew update || brew update
+      (brew list | grep -q pyenv) || brew install pyenv
+      brew outdated pyenv || brew upgrade pyenv
+      if which -s pyenv; then
+        eval "$(pyenv init -)"
+      fi
+      case "${TOXENV}" in
+        py34) pyenv install 3.4.6 && pyenv global 3.4.6 ;;
+        py35) pyenv install 3.5.3 && pyenv global 3.5.3 ;;
+        py36) pyenv install 3.6.1 && pyenv global 3.6.1 ;;
+      esac
+      pyenv rehash
+      python -m pip install --user virtualenv
+    else
+      pip install virtualenv
+    fi
+  - |
+    python -m virtualenv ~/.venv
+    source ~/.venv/bin/activate
+    pip install -U tox
+script:
+  - |
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+      eval "$(pyenv init -)"
+    fi
+    source ~/.venv/bin/activate
+    tox -v -- --tb=short
+notifications:
+  email:
+    on_success: never
+    on_failure: never
