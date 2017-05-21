@@ -2,6 +2,7 @@
 
 # ipybind includes have to be first so distutils.spawn is patched
 from ipybind.common import override_vars
+from ipybind.spawn import spawn_capture
 
 import os
 import pytest
@@ -102,12 +103,13 @@ def test_link_external(ip):
         with override_vars(config, **override):
             compiler = distutils.ccompiler.new_compiler()
             distutils.sysconfig.customize_compiler(compiler)
-            objects = compiler.compile([cpp])
-            if os.name == 'nt':
-                linker = compiler.create_static_lib
-            else:
-                linker = compiler.link_shared_lib
-            linker(objects, 'foo', lib_dir, target_lang='c++')
+            with spawn_capture():
+                objects = compiler.compile([cpp])
+                if os.name == 'nt':
+                    linker = compiler.create_static_lib
+                else:
+                    linker = compiler.link_shared_lib
+                linker(objects, 'foo', lib_dir, target_lang='c++')
 
         flags = '-f -I "{}" -L "{}" -l foo'.format(inc_dir, lib_dir)
         ip.run_cell_magic('pybind11', flags, """
