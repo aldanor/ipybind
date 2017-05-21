@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+# ipybind includes have to be first so distutils.spawn is patched
+from ipybind.common import override_vars
+
 import os
 import pytest
 import tempfile
@@ -11,8 +14,6 @@ import distutils.sysconfig
 
 from IPython.testing.globalipapp import get_ipython
 from IPython.core.history import HistoryManager
-
-from ipybind.common import override_vars
 
 
 @pytest.fixture(scope='session')
