@@ -41,7 +41,12 @@ def spawn_fn(mode, fmt=None):
             if out and (mode == 'always' or (mode == 'on_error' and p.returncode != 0)):
                 if fmt is not None:
                     out = fmt(out.decode('utf-8')).encode('utf-8')
+                sep = b'-' * 80 + b'\n'
+                sys.stdout.write(sep)
                 sys.stdout.write(out)
+                if not out.endswith(b'\n'):
+                    sys.stdout.write(b'\n')
+                sys.stdout.write(sep)
                 sys.stdout.flush()
             if p.returncode != 0:
                 raise subprocess.CalledProcessError
