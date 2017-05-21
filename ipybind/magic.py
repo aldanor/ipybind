@@ -105,6 +105,7 @@ class Pybind11Magics(Magics):
 
     def format_code(self, cell):
         code = cell.replace('PYBIND11_PLUGIN', '_PYBIND11_PLUGIN')
+        code = code.replace('PYBIND11_MODULE', '_PYBIND11_MODULE')
         code = '#include <pybind11_preamble.h>\n' + code
         code += '\n' * (not code.endswith('\n'))
         return code
@@ -146,7 +147,7 @@ class Pybind11Magics(Magics):
             libraries=[],
             language='c++',
             define_macros=[
-                ('_PYBIND11_MODULE_NAME', module)
+                ('_IPYBIND_MODULE_NAME', module)
             ]
         )
         extension.args = args
