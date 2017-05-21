@@ -38,7 +38,7 @@ def spawn_fn(mode, fmt=None):
         try:
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             out, _ = p.communicate()
-            if mode == 'always' or (mode == 'on_error' and p.returncode != 0):
+            if out and (mode == 'always' or (mode == 'on_error' and p.returncode != 0)):
                 if fmt is not None:
                     out = fmt(out.decode('utf-8')).encode('utf-8')
                 sys.stdout.write(out)
