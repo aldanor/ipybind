@@ -35,6 +35,8 @@ class Pybind11Magics(Magics):
               help='Pass --compiler to distutils.')
     @argument('-c', '--compile-args', action='append', default=[], metavar='ARGS',
               help='Extra flags to pass to the compiler.')
+    @argument('-l', '--lib', action='append', default=[], metavar='LIB',
+              help='Add libraries to link the extension against.')
     @cell_magic
     def pybind11(self, line, cell):
         """
@@ -139,7 +141,7 @@ class Pybind11Magics(Magics):
             library_dirs=library_dirs,
             extra_compile_args=split_args(args.compile_args),
             extra_link_args=[],
-            libraries=[],
+            libraries=args.lib,
             language='c++',
             define_macros=[
                 ('_IPYBIND_MODULE_NAME', module)
