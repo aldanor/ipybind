@@ -56,8 +56,13 @@ def split_args(args, recursive=False):
         return []
     result = []
     for arg in args:
-        for s in shlex.split(arg):
-            result.extend(shlex.split(s) if recursive else [s])
+        arg = arg.strip()
+        if arg.startswith('"') and arg.endswith('"') and len(arg) >= 2:
+            arg = arg[1:-1]
+        if recursive:
+            result.extend(shlex.split(arg))
+        else:
+            result.append(arg)
     return result
 
 
