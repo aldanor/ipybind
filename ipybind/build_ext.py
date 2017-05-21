@@ -80,9 +80,9 @@ class build_ext(setuptools.command.build_ext.build_ext):
                 basename = os.path.basename(source)
                 log = re.sub('^' + re.escape(basename) + r'\s+', '', log)
         log = re.sub(r'^/.+/(pybind11/[\w_]+\.h:)', r'\1',
-                        log, flags=re.MULTILINE)
+                     log, flags=re.MULTILINE)
         log = re.sub(r'^/.+/pybind11_preamble.h:', 'pybind11_preamble.h:',
-                        log, flags=re.MULTILINE)
+                     log, flags=re.MULTILINE)
         return log
 
     def build_extensions(self):
