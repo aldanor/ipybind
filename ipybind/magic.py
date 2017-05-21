@@ -131,13 +131,28 @@ class Pybind11Magics(Magics):
                     os.environ[k] = env[k]
 
     def make_extension(self, module, source, args):
-        include_dirs = [os.path.join(os.path.dirname(__file__), 'include')]
-        include_dirs += pybind11_get_include()
+        include_dirs = []
+        library_dirs = []
+
+        # add ipybind/include folder which contains pybind11_preamble.h
+        include_dirs.append(os.path.join(os.path.dirname(__file__), 'include'))
+
+        # add pybind11 include dirs if it's installed as a Python package
+        include_dirs.extend(pybind11_get_include())
+
+        # for conda environments, add conda-specific include/lib dirs
+        if os.path.isdir(os.path.join(sys.prefix, 'conda-meta')):
+            conda_lib_root = sys.prefix
+            if os.name == 'nt':
+                conda_lib_root = os.path.join(sys.prefix, 'Library')
+            include_dirs.append(os.path.join(conda_lib_root, 'include'))
+            library_dirs.append(os.path.join(conda_lib_root, 'lib'))
+
         extension = Extension(
             name=module,
             sources=[source],
             include_dirs=include_dirs,
-            library_dirs=[],
+            library_dirs=library_dirs,
             extra_compile_args=split_args(args.compile_args),
             extra_link_args=[],
             libraries=[],
