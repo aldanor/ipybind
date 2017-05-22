@@ -104,7 +104,7 @@ def test_link_external(ip):
             compiler = distutils.ccompiler.new_compiler()
             distutils.sysconfig.customize_compiler(compiler)
             with spawn_capture():
-                objects = compiler.compile([cpp])
+                objects = compiler.compile([cpp], output_dir=lib_dir)
                 if os.name == 'nt':
                     linker = compiler.create_static_lib
                 else:
