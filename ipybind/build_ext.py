@@ -37,11 +37,13 @@ class build_ext(setuptools.command.build_ext.build_ext):
             distutils.log.set_threshold(level)
 
     def has_flag(self, flag):
-        with tempfile.NamedTemporaryFile('w', suffix='.cpp') as f:
-            f.write('int main() { return 0; }')
+        with tempfile.TemporaryDirectory() as d:
+            cpp = os.path.join(d, 'test.cpp')
+            with open(cpp, 'w') as f:
+                f.write('int main() { return 0; }')
             try:
                 with self.silence():
-                    self.compiler.compile([f.name], extra_postargs=[flag])
+                    self.compiler.compile([f.name], extra_postargs=[flag], output_dir=d)
             except distutils.errors.CompileError:
                 return False
         return True
