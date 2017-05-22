@@ -1,0 +1,20 @@
+image:
+  - Visual Studio 2015
+build: false
+test: false
+environment:
+  # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
+  # /E:ON and /V:ON options are not enabled in the batch script intepreter
+  # See: http://stackoverflow.com/a/13751649/163740
+  CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\ci\\run_with_env.cmd"
+  matrix:
+    - {PYTHON_HOME: "C:\\Python35", PYTHON_VERSION: "3.5", PYTHON_ARCH: "32"}
+    - {PYTHON_HOME: "C:\\Python36", PYTHON_VERSION: "3.6", PYTHON_ARCH: "32"}
+    - {PYTHON_HOME: "C:\\Python35-x64", PYTHON_VERSION: "3.5", PYTHON_ARCH: "64"}
+    - {PYTHON_HOME: "C:\\Python36-x64", PYTHON_VERSION: "3.6", PYTHON_ARCH: "64"}
+install:
+  - python -u ci\appveyor-bootstrap.py
+  - "SET PATH=%PYTHON_HOME%;%PYTHON_HOME%\\Scripts;%PATH%"
+  - python --version
+test_script:
+  - "%CMD_IN_ENV% tox -v -e pywin -- --tb=short"
