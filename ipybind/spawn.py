@@ -41,8 +41,9 @@ def spawn_fn(mode, fmt=None, log_commands=False):
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             out, _ = p.communicate()
             if out and (mode == 'always' or (mode == 'on_error' and p.returncode != 0)):
+                out = out.decode('utf-8')
                 if fmt is not None:
-                    out = fmt(out.decode('utf-8'))
+                    out = fmt(out)
                 sep = '-' * 80 + '\n'
                 sys.stdout.write(sep)
                 sys.stdout.write(out)
