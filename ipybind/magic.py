@@ -123,6 +123,7 @@ class Pybind11Magics(Magics):
     def make_extension(self, module, source, args):
         include_dirs = []
         library_dirs = []
+        runtime_library_dirs = None
 
         # add ipybind/include folder which contains pybind11_preamble.h
         include_dirs.append(os.path.join(os.path.dirname(__file__), 'include'))
@@ -142,11 +143,16 @@ class Pybind11Magics(Magics):
         include_dirs.extend(split_args(args.include))
         library_dirs.extend(split_args(args.libdir))
 
+        # on non-OSX / non-Windows, also set rpath if required
+        if os.name != 'nt' and sys.platform[:6] != 'darwin':
+            runtime_library_dirs = library_dirs
+
         extension = Extension(
             name=module,
             sources=[source],
             include_dirs=include_dirs,
             library_dirs=library_dirs,
+            runtime_library_dirs=runtime_library_dirs,
             extra_compile_args=split_args(args.compile_args, recursive=True),
             extra_link_args=[],
             libraries=args.lib,
