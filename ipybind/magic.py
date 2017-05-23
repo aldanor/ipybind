@@ -122,22 +122,30 @@ class Pybind11Magics(Magics):
 
     def make_extension(self, module, source, args):
         include_dirs = []
+        sys_include = []
         library_dirs = []
         runtime_library_dirs = None
+        compile_args = []
 
         # add ipybind/include folder which contains pybind11_preamble.h
-        include_dirs.append(os.path.join(os.path.dirname(__file__), 'include'))
+        sys_include.append(os.path.join(os.path.dirname(__file__), 'include'))
 
         # add pybind11 include dirs if it's installed as a Python package
-        include_dirs.extend(pybind11_get_include())
+        sys_include.extend(pybind11_get_include())
 
         # for conda environments, add conda-specific include/lib dirs
         if os.path.isdir(os.path.join(sys.prefix, 'conda-meta')):
             conda_lib_root = sys.prefix
             if os.name == 'nt':
                 conda_lib_root = os.path.join(sys.prefix, 'Library')
-            include_dirs.append(os.path.join(conda_lib_root, 'include'))
+            sys_include.append(os.path.join(conda_lib_root, 'include'))
             library_dirs.append(os.path.join(conda_lib_root, 'lib'))
+
+        # add pybind11 and conda include dirs as -isystem on gcc/clang
+        if os.name == 'nt':
+            include_dirs = sys_include
+        else:
+            compile_args.extend(sum(zip(['-isystem'] * len(sys_include), sys_include), ()))
 
         # add user-specified include and library directories
         include_dirs.extend(split_args(args.include))
@@ -147,13 +155,16 @@ class Pybind11Magics(Magics):
         if os.name != 'nt' and sys.platform[:6] != 'darwin':
             runtime_library_dirs = library_dirs
 
+        # add user-specified compile args
+        compile_args.extend(split_args(args.compile_args, recursive=True))
+
         extension = Extension(
             name=module,
             sources=[source],
             include_dirs=include_dirs,
             library_dirs=library_dirs,
             runtime_library_dirs=runtime_library_dirs,
-            extra_compile_args=split_args(args.compile_args, recursive=True),
+            extra_compile_args=compile_args,
             extra_link_args=[],
             libraries=args.lib,
             language='c++',
