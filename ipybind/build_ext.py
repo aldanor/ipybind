@@ -11,7 +11,7 @@ import distutils.file_util
 import distutils.log
 import setuptools.command.build_ext
 
-from ipybind.common import ext_path
+from ipybind.common import cache_path
 from ipybind.spawn import spawn_capture
 
 
@@ -115,6 +115,6 @@ class build_ext(setuptools.command.build_ext.build_ext):
         for ext in self.extensions:
             filename = self.get_ext_filename(self.get_ext_fullname(ext.name))
             src = os.path.join(self.build_lib, filename)
-            dest = ext_path(os.path.basename(filename))
+            dest = cache_path(os.path.basename(filename))
             distutils.file_util.copy_file(
                 src, dest, verbose=self.verbose, dry_run=self.dry_run)

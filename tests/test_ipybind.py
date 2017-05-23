@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # ipybind includes have to be first so distutils.spawn is patched
-from ipybind.common import override_vars
+from ipybind.common import override_vars, is_win
 from ipybind.spawn import spawn_capture
 
 import os
@@ -113,7 +113,7 @@ def test_link_external(ip):
             distutils.sysconfig.customize_compiler(compiler)
             with spawn_capture():
                 objects = compiler.compile([cpp], output_dir=lib_dir)
-                if os.name == 'nt':
+                if is_win():
                     linker = compiler.create_static_lib
                 else:
                     linker = compiler.link_shared_lib

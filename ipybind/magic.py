@@ -13,8 +13,8 @@ from IPython.core.magic import Magics, magics_class, cell_magic, line_magic, on_
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 
 from ipybind.build_ext import build_ext
-from ipybind.common import (ext_suffix, ext_path, is_kernel, split_args,
-                            pybind11_get_include, override_vars)
+from ipybind.common import (ext_suffix, cache_path, is_kernel, split_args,
+                            pybind11_get_include, override_vars, is_win, is_osx)
 from ipybind.stream import start_forwarding, stop_forwarding
 
 
@@ -58,7 +58,7 @@ class Pybind11Magics(Magics):
         args = parse_argstring(self.pybind11, line)
         code = self.format_code(cell)
         module = 'pybind11_{}'.format(self.compute_hash(code, args))
-        libfile = ext_path(module + ext_suffix())
+        libfile = cache_path(module + ext_suffix())
         need_rebuild = not os.path.isfile(libfile) or args.force
         if need_rebuild:
             source = self.save_source(code, module)
@@ -116,7 +116,7 @@ class Pybind11Magics(Magics):
         return code
 
     def save_source(self, code, module):
-        filename = ext_path(module + '.cpp')
+        filename = cache_path(module + '.cpp')
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         with open(filename, 'w') as f:
             f.write(code)
@@ -138,13 +138,13 @@ class Pybind11Magics(Magics):
         # for conda environments, add conda-specific include/lib dirs
         if os.path.isdir(os.path.join(sys.prefix, 'conda-meta')):
             conda_lib_root = sys.prefix
-            if os.name == 'nt':
+            if is_win():
                 conda_lib_root = os.path.join(sys.prefix, 'Library')
             sys_include.append(os.path.join(conda_lib_root, 'include'))
             library_dirs.append(os.path.join(conda_lib_root, 'lib'))
 
         # add pybind11 and conda include dirs as -isystem on gcc/clang
-        if os.name == 'nt':
+        if is_win():
             include_dirs = sys_include
         else:
             compile_args.extend(sum(zip(['-isystem'] * len(sys_include), sys_include), ()))
@@ -154,7 +154,7 @@ class Pybind11Magics(Magics):
         library_dirs.extend(split_args(args.libdir))
 
         # on non-OSX / non-Windows, also set rpath if required
-        if os.name != 'nt' and sys.platform[:6] != 'darwin':
+        if not is_win() and not is_osx():
             runtime_library_dirs = library_dirs
 
         # add user-specified compile args
@@ -179,7 +179,7 @@ class Pybind11Magics(Magics):
 
     def build_module(self, module, source, args):
         with override_vars(os.environ, **{'CC': args.cc, 'CXX': args.cxx}):
-            workdir = ext_path(module)
+            workdir = cache_path(module)
             os.makedirs(workdir, exist_ok=True)
             script_args = ['-v' if args.verbose else '-q']
             script_args += ['build_ext', '--inplace', '--build-temp', workdir]

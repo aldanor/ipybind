@@ -5,6 +5,7 @@ import functools
 import imp
 import os
 import shlex
+import sys
 import sysconfig
 
 from IPython import get_ipython
@@ -24,16 +25,25 @@ def cache_dir():
     return os.path.join(root, 'pybind11')
 
 
+def is_win():
+    """Return True on Windows."""
+    return os.name == 'nt'
+
+
+def is_osx():
+    """Return True on OS X / macOS."""
+    return sys.platform[:6] == 'darwin'
+
+
 @functools.lru_cache()
 def ext_suffix():
     """Get extension suffix for C extensions on this platform."""
-    if os.name == 'nt':
+    if is_win():
         return imp.get_suffixes()[0][0]
-    else:
-        return sysconfig.get_config_var('EXT_SUFFIX')
+    return sysconfig.get_config_var('EXT_SUFFIX')
 
 
-def ext_path(*path):
+def cache_path(*path):
     """Return an absolute path given a relative path within cache directory."""
     return os.path.join(cache_dir(), *path)
 
