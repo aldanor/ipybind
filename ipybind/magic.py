@@ -41,6 +41,8 @@ class Pybind11Magics(Magics):
               help='Add paths to the list of include directories.')
     @argument('-L', '--libdir', action='append', default=[], metavar='LIBDIR',
               help='Add paths to the list of library directories.')
+    @argument('-m', '--module', action='store_true',
+              help='Import the module object instead of its contents.')
     @cell_magic
     def pybind11(self, line, cell):
         """
@@ -61,7 +63,7 @@ class Pybind11Magics(Magics):
         if need_rebuild:
             source = self.save_source(code, module)
             self.build_module(module, source, args)
-        self.import_module(module, libfile)
+        self.import_module(module, libfile, import_symbols=not args.module)
 
     @line_magic
     def pybind11_capture(self, parameter_s=''):
@@ -193,8 +195,11 @@ class Pybind11Magics(Magics):
                 cmdclass={'build_ext': build_ext}
             )
 
-    def import_module(self, module, libfile):
+    def import_module(self, module, libfile, import_symbols=True):
         mod = imp.load_dynamic(module, libfile)
-        for k, v in mod.__dict__.items():
-            if not k.startswith('__'):
-                self.shell.push({k: v})
+        if import_symbols:
+            for k, v in mod.__dict__.items():
+                if not k.startswith('__'):
+                    self.shell.push({k: v})
+        else:
+            self.shell.push({mod.__name__: mod})
