@@ -31,12 +31,12 @@ def ip(kernel):
     return kernel
 
 
-def module(code):
-    return """PYBIND11_PLUGIN(test) {{
-        py::module m("test");
-        {}
+def module(code, name='test'):
+    return """PYBIND11_PLUGIN({name}) {{
+        py::module m("{name}");
+        {code}
         return m.ptr();
-    }}""".format(code)
+    }}""".format(name=name, code=code)
 
 
 def test_pybind11_capture(ip, capsys):
@@ -45,7 +45,7 @@ def test_pybind11_capture(ip, capsys):
     assert 'capturing is not available' in out
 
 
-def test_import_all(ip):
+def test_module_import(ip):
     ip.run_cell_magic('pybind11', '-f', module("""
         m.attr("x") = py::cast(1);
         m.attr("_y") = py::cast(2);
@@ -54,6 +54,14 @@ def test_import_all(ip):
     assert ip.user_ns['x'] == 1
     assert ip.user_ns['_y'] == 2
     assert '__z' not in ip.user_ns
+
+    ip.run_cell_magic('pybind11', '-f -m', module("""
+        m.attr("a") = py::cast(42);
+    """, name='testmod'))
+    assert 'a' not in ip.user_ns
+    mod = ip.user_ns['testmod']
+    assert mod.__name__ == 'testmod'
+    assert mod.a == 42
 
 
 def test_recompile(ip):
