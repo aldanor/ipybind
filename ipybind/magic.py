@@ -7,14 +7,14 @@ import sys
 import time
 import warnings
 
-from setuptools import setup, Extension
+import setuptools
 
 from IPython.core.magic import Magics, magics_class, cell_magic, line_magic, on_off
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 
 from ipybind.build_ext import build_ext
-from ipybind.common import (ext_suffix, cache_path, is_kernel, split_args,
-                            pybind11_get_include, override_vars, is_win, is_osx)
+from ipybind.common import ext_suffix, cache_path, is_kernel, split_args, override_vars
+from ipybind.extension import Extension
 from ipybind.stream import start_forwarding, stop_forwarding
 
 
@@ -123,59 +123,15 @@ class Pybind11Magics(Magics):
         return filename
 
     def make_extension(self, module, source, args):
-        include_dirs = []
-        sys_include = []
-        library_dirs = []
-        runtime_library_dirs = None
-        compile_args = []
-
-        # add ipybind/include folder which contains pybind11_preamble.h
-        sys_include.append(os.path.join(os.path.dirname(__file__), 'include'))
-
-        # add pybind11 include dirs if it's installed as a Python package
-        sys_include.extend(pybind11_get_include())
-
-        # for conda environments, add conda-specific include/lib dirs
-        if os.path.isdir(os.path.join(sys.prefix, 'conda-meta')):
-            conda_lib_root = sys.prefix
-            if is_win():
-                conda_lib_root = os.path.join(sys.prefix, 'Library')
-            sys_include.append(os.path.join(conda_lib_root, 'include'))
-            library_dirs.append(os.path.join(conda_lib_root, 'lib'))
-
-        # add pybind11 and conda include dirs as -isystem on gcc/clang
-        if is_win():
-            include_dirs = sys_include
-        else:
-            compile_args.extend(sum(zip(['-isystem'] * len(sys_include), sys_include), ()))
-
-        # add user-specified include and library directories
-        include_dirs.extend(split_args(args.include))
-        library_dirs.extend(split_args(args.libdir))
-
-        # on non-OSX / non-Windows, also set rpath if required
-        if not is_win() and not is_osx():
-            runtime_library_dirs = library_dirs
-
-        # add user-specified compile args
-        compile_args.extend(split_args(args.compile_args, recursive=True))
-
-        extension = Extension(
-            name=module,
-            sources=[source],
-            include_dirs=include_dirs,
-            library_dirs=library_dirs,
-            runtime_library_dirs=runtime_library_dirs,
-            extra_compile_args=compile_args,
-            extra_link_args=[],
+        return Extension(
+            module,
+            [source],
+            include_dirs=split_args(args.include),
+            library_dirs=split_args(args.libdir),
             libraries=args.lib,
-            language='c++',
-            define_macros=[
-                ('_IPYBIND_MODULE_NAME', module)
-            ]
+            extra_compile_args=split_args(args.compile_args, recursive=True),
+            cpp_std=args.std
         )
-        extension.args = args
-        return extension
 
     def build_module(self, module, source, args):
         with override_vars(os.environ, **{'CC': args.cc, 'CXX': args.cxx}):
@@ -188,7 +144,7 @@ class Pybind11Magics(Magics):
             if args.compiler is not None:
                 script_args += ['--compiler', args.compiler]
             warnings.filterwarnings('ignore', 'To exit')
-            setup(
+            setuptools.setup(
                 name=module,
                 ext_modules=[self.make_extension(module, source, args)],
                 script_args=script_args,
