@@ -60,22 +60,6 @@ def pybind11_get_include():
         return []
 
 
-def split_args(args, recursive=False):
-    """Unquote arguments in the list using `shlex.split`."""
-    if not args:
-        return []
-    result = []
-    for arg in args:
-        arg = arg.strip()
-        if arg.startswith('"') and arg.endswith('"') and len(arg) >= 2:
-            arg = arg[1:-1]
-        if recursive:
-            result.extend(shlex.split(arg))
-        else:
-            result.append(arg)
-    return result
-
-
 @contextlib.contextmanager
 def override_vars(target, **override):
     """Context manager for overriding variables in an arbitrary dict."""
