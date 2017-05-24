@@ -26,3 +26,5 @@ docs/_build/
 /*.ipynb
 foo*
 /test*.py
+*.out
+*.exe
