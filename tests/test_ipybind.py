@@ -31,12 +31,13 @@ def ip(kernel):
     return kernel
 
 
-def module(code, name='test'):
-    return """PYBIND11_PLUGIN({name}) {{
+def module(code, name='test', header=None):
+    return """{header}PYBIND11_PLUGIN({name}) {{
         py::module m("{name}");
         {code}
         return m.ptr();
-    }}""".format(name=name, code=code)
+    }}""".format(name=name, code=code,
+                 header=header + '\n' if header else '')
 
 
 def test_pybind11_capture(ip, capsys):
@@ -120,14 +121,8 @@ def test_link_external(ip):
                 linker(objects, 'foo', lib_dir, target_lang='c++')
 
         flags = '-f -I "{}" -L "{}" -l foo'.format(inc_dir, lib_dir)
-        ip.run_cell_magic('pybind11', flags, """
-        #include <foo.h>
-
-        PYBIND11_PLUGIN(foo) {
-            py::module m("foo");
+        ip.run_cell_magic('pybind11', flags, module("""
             m.def("bar", [](int x) { return baz::foo(x); });
-            return m.ptr();
-        }
-        """)
+        """, header='#include <foo.h>'))
 
         assert ip.user_ns['bar'](42) == 420
