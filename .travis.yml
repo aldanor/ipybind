@@ -15,7 +15,7 @@ install:
 script: |
     if [[ "$(uname -s)" == "Darwin" ]]; then eval "$(pyenv init -)"; fi
     source ~/.venv/bin/activate
-    tox -v -- --tb=short
+    tox -v
 notifications:
   email:
     on_success: never

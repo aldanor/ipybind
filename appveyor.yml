@@ -17,4 +17,4 @@ install:
   - "SET PATH=%PYTHON_HOME%;%PYTHON_HOME%\\Scripts;%PATH%"
   - python --version
 test_script:
-  - "%CMD_IN_ENV% tox -v -e pywin -- --tb=short"
+  - "%CMD_IN_ENV% tox -v -e pywin"
