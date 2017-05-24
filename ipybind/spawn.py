@@ -44,14 +44,15 @@ def spawn_fn(mode, handler=None, log_commands=False):
                 out = out.decode('utf-8')
                 if handler is not None:
                     out = handler(out) or ''
-                if mode == 'always' or (mode == 'on_error' and p.returncode != 0):
-                    sep = '-' * 80 + '\n'
-                    sys.stdout.write(sep)
-                    sys.stdout.write(out)
-                    if not out.endswith('\n'):
-                        sys.stdout.write('\n')
-                    sys.stdout.write(sep)
-                    sys.stdout.flush()
+                if out.strip():
+                    if mode == 'always' or (mode == 'on_error' and p.returncode != 0):
+                        sep = '-' * 80 + '\n'
+                        sys.stdout.write(sep)
+                        sys.stdout.write(out)
+                        if not out.endswith('\n'):
+                            sys.stdout.write('\n')
+                        sys.stdout.write(sep)
+                        sys.stdout.flush()
             if p.returncode != 0:
                 raise subprocess.CalledProcessError(p.returncode, cmd)
         except OSError as e:
