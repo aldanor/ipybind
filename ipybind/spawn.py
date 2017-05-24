@@ -11,14 +11,20 @@ import distutils.spawn
 
 class inject:
     def __init__(self, fn):
-        self.orig = fn
-        self.set(fn)
+        self.orig = self.fn = fn
+        self.locked = False
 
-    def set(self, fn):
-        self.fn = fn
+    def set(self, fn, lock=None):
+        if not self.locked:
+            self.orig = self.fn
+            self.fn = fn
+            if lock is not None:
+                self.locked = lock
 
     def reset(self):
-        self.fn = self.orig
+        if not self.locked:
+            self.fn = self.orig
+            self.locked = False
 
     def __call__(self, *args, **kwargs):
         return self.fn(*args, **kwargs)
@@ -67,9 +73,14 @@ def spawn_fn(mode, handler=None, log_commands=False):
 
 
 @contextlib.contextmanager
-def spawn_capture(mode='on_error', handler=None, log_commands=False):
-    distutils.spawn.spawn.set(spawn_fn(mode, handler=handler, log_commands=log_commands))
-    try:
+def spawn_capture(mode='on_error', handler=None, log_commands=False, lock=False):
+    func = spawn_fn(mode, handler=handler, log_commands=log_commands)
+    target = distutils.spawn.spawn
+    if target.locked:
         yield
-    finally:
-        distutils.spawn.spawn.reset()
+    else:
+        target.set(func, lock=lock)
+        try:
+            yield
+        finally:
+            target.reset()
