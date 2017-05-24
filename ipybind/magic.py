@@ -3,6 +3,7 @@
 import hashlib
 import imp
 import os
+import shlex
 import sys
 import time
 import warnings
@@ -13,7 +14,7 @@ from IPython.core.magic import Magics, magics_class, cell_magic, line_magic, on_
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 
 from ipybind.build_ext import build_ext
-from ipybind.common import ext_suffix, cache_path, is_kernel, split_args, override_vars
+from ipybind.common import ext_suffix, cache_path, is_kernel, override_vars
 from ipybind.extension import Extension
 from ipybind.stream import start_forwarding, stop_forwarding
 
@@ -53,7 +54,7 @@ class Pybind11Magics(Magics):
         """
 
         line = line.strip().rstrip(';')
-        args = parse_argstring(self.pybind11, line)
+        args = self.pybind11.parser.parse_args(shlex.split(line))
         code = self.format_code(cell)
         module = 'pybind11_{}'.format(self.compute_hash(code, args))
         libfile = cache_path(module + ext_suffix())
@@ -124,16 +125,16 @@ class Pybind11Magics(Magics):
         return Extension(
             module,
             [source],
-            include_dirs=split_args(args.include),
-            library_dirs=split_args(args.libdir),
+            include_dirs=args.include,
+            library_dirs=args.libdir,
             libraries=args.lib,
-            extra_compile_args=split_args(args.compile_args, recursive=True),
+            extra_compile_args=args.compile_args,
             cpp_std=args.std
         )
 
     def build_module(self, module, source, args):
         keys, values = list(zip(*args.env)) or ((), ())
-        env = dict(zip(map(str.strip, split_args(keys)), split_args(values)))
+        env = dict(zip(map(str.strip, keys), values))
         with override_vars(os.environ, **env):
             workdir = cache_path(module)
             os.makedirs(workdir, exist_ok=True)
