@@ -126,3 +126,36 @@ def test_link_external(ip):
         """, header='#include <foo.h>'))
 
         assert ip.user_ns['bar'](42) == 420
+
+
+def test_env_override(ip):
+    with tempfile.TemporaryDirectory() as root_dir:
+        cpp = os.path.join(root_dir, 'foo.cpp')
+        with open(cpp, 'w') as f:
+            f.write('#include <dummy.h>\nint main() { return 0; })\n')
+        inc_dir = os.path.join(root_dir, 'inc dir')
+        os.makedirs(inc_dir)
+        hdr = os.path.join(inc_dir, 'dummy.h')
+        with open(hdr, 'w') as f:
+            f.write('namespace x { int f() { return 42; } }')
+
+        code = module("""
+            m.def("g", []() { return x::f(); });
+        """, header='#include <dummy.h>')
+
+        log = []
+        with spawn_capture(handler=log.append, lock=True):
+            with pytest.raises(SystemExit) as excinfo:
+                ip.run_cell_magic('pybind11', '-f', code)
+            assert 'failed' in str(excinfo.value)
+        assert 'dummy.h' in ''.join(log)
+
+        if is_win():
+            env = 'CL', r'/I \"{}\"'.format(inc_dir)
+        else:
+            env = 'CPLUS_INCLUDE_PATH', inc_dir
+        flags = '-f -e {} "{}"'.format(*env)
+
+        with spawn_capture():
+            ip.run_cell_magic('pybind11', flags, code)
+        assert ip.user_ns['g']() == 42
