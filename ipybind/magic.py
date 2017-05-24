@@ -27,12 +27,10 @@ class Pybind11Magics(Magics):
               help='Display compilation output.')
     @argument('-std', choices=['c++11', 'c++14', 'c++1z', 'c++17'],
               help='C++ standard, defaults to C++14 if available.')
-    @argument('--cc',
-              help='Set CC environment variable.')
-    @argument('--cxx',
-              help='Set CXX environment variable.')
     @argument('--compiler',
               help='Pass --compiler to distutils.')
+    @argument('-e', '--env', action='append', default=[], metavar=('KEY', 'VALUE'), nargs=2,
+              help='Override environment variables during the build.')
     @argument('-c', '--compile-args', action='append', default=[], metavar='ARGS',
               help='Extra flags to pass to the compiler.')
     @argument('-l', '--lib', action='append', default=[], metavar='LIB',
@@ -134,7 +132,9 @@ class Pybind11Magics(Magics):
         )
 
     def build_module(self, module, source, args):
-        with override_vars(os.environ, **{'CC': args.cc, 'CXX': args.cxx}):
+        keys, values = list(zip(*args.env)) or ((), ())
+        env = dict(zip(map(str.strip, split_args(keys)), split_args(values)))
+        with override_vars(os.environ, **env):
             workdir = cache_path(module)
             os.makedirs(workdir, exist_ok=True)
             script_args = ['-v' if args.verbose else '-q']
