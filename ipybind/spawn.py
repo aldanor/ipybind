@@ -28,7 +28,7 @@ def patch_spawn():
     distutils.spawn.spawn = inject(distutils.spawn.spawn)
 
 
-def spawn_fn(mode, fmt=None, log_commands=False):
+def spawn_fn(mode, handler=None, log_commands=False):
     def spawn(cmd, search_path=True, verbose=False, dry_run=False):
         cmd = list(cmd)
         if search_path:
@@ -40,17 +40,18 @@ def spawn_fn(mode, fmt=None, log_commands=False):
         try:
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             out, _ = p.communicate()
-            if out and (mode == 'always' or (mode == 'on_error' and p.returncode != 0)):
+            if out:
                 out = out.decode('utf-8')
-                if fmt is not None:
-                    out = fmt(out)
-                sep = '-' * 80 + '\n'
-                sys.stdout.write(sep)
-                sys.stdout.write(out)
-                if not out.endswith('\n'):
-                    sys.stdout.write('\n')
-                sys.stdout.write(sep)
-                sys.stdout.flush()
+                if handler is not None:
+                    out = handler(out) or ''
+                if mode == 'always' or (mode == 'on_error' and p.returncode != 0):
+                    sep = '-' * 80 + '\n'
+                    sys.stdout.write(sep)
+                    sys.stdout.write(out)
+                    if not out.endswith('\n'):
+                        sys.stdout.write('\n')
+                    sys.stdout.write(sep)
+                    sys.stdout.flush()
             if p.returncode != 0:
                 raise subprocess.CalledProcessError(p.returncode, cmd)
         except OSError as e:
@@ -65,8 +66,8 @@ def spawn_fn(mode, fmt=None, log_commands=False):
 
 
 @contextlib.contextmanager
-def spawn_capture(mode='on_error', fmt=None, log_commands=False):
-    distutils.spawn.spawn.set(spawn_fn(mode, fmt=fmt, log_commands=log_commands))
+def spawn_capture(mode='on_error', handler=None, log_commands=False):
+    distutils.spawn.spawn.set(spawn_fn(mode, handler=handler, log_commands=log_commands))
     try:
         yield
     finally:
