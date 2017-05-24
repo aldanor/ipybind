@@ -25,28 +25,31 @@ class build_ext(setuptools.command.build_ext.build_ext):
         return self.compiler.compiler_type == 'msvc'
 
     @contextlib.contextmanager
-    def silence(self):
+    def silence(self, handler=None):
         verbose = self.compiler.verbose
         self.compiler.verbose = 0
         level = distutils.log.set_threshold(5)
         try:
-            with spawn_capture('never'):
+            with spawn_capture('never', handler=handler):
                 yield
         finally:
             self.compiler.verbose = verbose
             distutils.log.set_threshold(level)
 
     def has_flag(self, flag):
+        warnings = []
+        # cl.exe may yield return code of 0 if flag is unknown and instead print a warning
+        handler = lambda log: warnings.append("unknown option '{}'".format(flag) in log)
         with tempfile.TemporaryDirectory() as d:
             cpp = os.path.join(d, 'test.cpp')
             with open(cpp, 'w') as f:
                 f.write('int main() { return 0; }')
             try:
-                with self.silence():
+                with self.silence(handler=self.is_msvc and handler or None):
                     self.compiler.compile([f.name], extra_postargs=[flag], output_dir=d)
             except distutils.errors.CompileError:
                 return False
-        return True
+        return not any(warnings)
 
     def std_flags(self, std):
         if self.is_msvc:
