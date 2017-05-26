@@ -172,7 +172,7 @@ class Wurlitzer:
         # flush the underlying C buffers
         libc.fflush(c_stdout_p)
         libc.fflush(c_stderr_p)
-        time.sleep(0.005)  # a real cheesy way to avoid potential segfaults
+        time.sleep(0.025)  # a real cheesy way to avoid potential segfaults
         # close FDs, signaling output is complete
         for real_fd in self._real_fds.values():
             os.close(real_fd)
@@ -181,7 +181,10 @@ class Wurlitzer:
         # restore original state
         for name, real_fd in self._real_fds.items():
             save_fd = self._save_fds[name]
-            os.dup2(save_fd, real_fd)
+            try:
+                os.dup2(save_fd, real_fd)
+            except OSError:
+                os.dup2(save_fd, real_fd)
             os.close(save_fd)
         # finalize handle
         self._finish_handle()
