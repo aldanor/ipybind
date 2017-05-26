@@ -11,7 +11,7 @@ import warnings
 import setuptools
 
 from IPython.core.magic import Magics, magics_class, cell_magic, line_magic, on_off
-from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
+from IPython.core.magic_arguments import argument, magic_arguments
 
 from ipybind.build_ext import build_ext
 from ipybind.common import ext_suffix, cache_path, is_kernel, override_vars
