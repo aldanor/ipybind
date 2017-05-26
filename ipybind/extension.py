@@ -10,7 +10,7 @@ from ipybind.common import pybind11_get_include, is_win, is_osx
 
 class Extension(setuptools.Extension):
     def __init__(self, module, sources, include_dirs=None, library_dirs=None,
-                 libraries=None, extra_compile_args=None, std=None):
+                 libraries=None, extra_compile_args=None, extra_link_args=None, std=None):
         ext_include_dirs = []
         ext_library_dirs = []
         ext_extra_compile_args = []
@@ -58,7 +58,7 @@ class Extension(setuptools.Extension):
             library_dirs=ext_library_dirs,
             runtime_library_dirs=ext_runtime_library_dirs,
             extra_compile_args=ext_extra_compile_args,
-            extra_link_args=[],
+            extra_link_args=extra_link_args or [],
             libraries=libraries or [],
             language='c++',
             define_macros=[

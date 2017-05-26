@@ -40,6 +40,8 @@ class Pybind11Magics(Magics):
               help='Add paths to the list of include directories.')
     @argument('-L', '--library-dirs', action='append', default=[], metavar='LIBDIR',
               help='Add paths to the list of library directories.')
+    @argument('-Wl', '--extra-link-args', action='append', default=[], metavar='ARGS',
+              help='Extra flags to pass to the linker.')
     @argument('-m', '--module', action='store_true',
               help='Import the module object instead of its contents.')
     @cell_magic
@@ -129,6 +131,7 @@ class Pybind11Magics(Magics):
             library_dirs=args.library_dirs,
             libraries=args.libraries,
             extra_compile_args=args.extra_compile_args,
+            extra_link_args=args.extra_link_args,
             std=args.std
         )
 
