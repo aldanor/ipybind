@@ -130,8 +130,8 @@ class Pybind11Magics(Magics):
             include_dirs=args.include_dirs,
             library_dirs=args.library_dirs,
             libraries=args.libraries,
-            extra_compile_args=args.extra_compile_args,
-            extra_link_args=args.extra_link_args,
+            extra_compile_args=[arg for c in args.extra_compile_args for arg in shlex.split(c)],
+            extra_link_args=[arg for c in args.extra_link_args for arg in shlex.split(c)],
             std=args.std
         )
 
