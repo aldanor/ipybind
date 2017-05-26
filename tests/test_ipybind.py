@@ -159,3 +159,11 @@ def test_env_override(ip):
         with spawn_capture():
             ip.run_cell_magic('pybind11', flags, code)
         assert ip.user_ns['g']() == 42
+
+
+def test_extra_compile_args(ip):
+    if not is_win():
+        flags = '-Wextra -O1'
+    else:
+        flags = '/W4 /O1'
+    ip.run_cell_magic('pybind11', '-f -c="{}"'.format(flags), module(''))
