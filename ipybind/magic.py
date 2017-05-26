@@ -32,13 +32,13 @@ class Pybind11Magics(Magics):
               help='Pass --compiler to distutils.')
     @argument('-e', '--env', action='append', default=[], metavar=('KEY', 'VALUE'), nargs=2,
               help='Override environment variables during the build.')
-    @argument('-c', '--compile-args', action='append', default=[], metavar='ARGS',
+    @argument('-c', '--extra-compile-args', action='append', default=[], metavar='ARGS',
               help='Extra flags to pass to the compiler.')
-    @argument('-l', '--lib', action='append', default=[], metavar='LIB',
+    @argument('-l', '--libraries', action='append', default=[], metavar='LIB',
               help='Add libraries to link the extension against.')
-    @argument('-I', '--include', action='append', default=[], metavar='INCLUDE',
+    @argument('-I', '--include-dirs', action='append', default=[], metavar='INCLUDE',
               help='Add paths to the list of include directories.')
-    @argument('-L', '--libdir', action='append', default=[], metavar='LIBDIR',
+    @argument('-L', '--library-dirs', action='append', default=[], metavar='LIBDIR',
               help='Add paths to the list of library directories.')
     @argument('-m', '--module', action='store_true',
               help='Import the module object instead of its contents.')
@@ -125,11 +125,11 @@ class Pybind11Magics(Magics):
         return Extension(
             module,
             [source],
-            include_dirs=args.include,
-            library_dirs=args.libdir,
-            libraries=args.lib,
-            extra_compile_args=args.compile_args,
-            cpp_std=args.std
+            include_dirs=args.include_dirs,
+            library_dirs=args.library_dirs,
+            libraries=args.libraries,
+            extra_compile_args=args.extra_compile_args,
+            std=args.std
         )
 
     def build_module(self, module, source, args):

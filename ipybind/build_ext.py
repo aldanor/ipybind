@@ -94,7 +94,7 @@ class build_ext(setuptools.command.build_ext.build_ext):
         if self.is_unix:
             self.remove_flag('-Wstrict-prototypes')  # may be an invalid flag on gcc
         for ext in self.extensions:
-            compile_args = self.std_flags(ext.cpp_std)
+            compile_args = self.std_flags(ext.std)
             link_args = []
             if self.is_unix:  # gcc / clang
                 if self.has_flag('-fvisibility=hidden'):

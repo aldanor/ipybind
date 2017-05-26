@@ -10,7 +10,7 @@ from ipybind.common import pybind11_get_include, is_win, is_osx
 
 class Extension(setuptools.Extension):
     def __init__(self, module, sources, include_dirs=None, library_dirs=None,
-                 libraries=None, extra_compile_args=None, cpp_std=None):
+                 libraries=None, extra_compile_args=None, std=None):
         ext_include_dirs = []
         ext_library_dirs = []
         ext_extra_compile_args = []
@@ -49,7 +49,7 @@ class Extension(setuptools.Extension):
         ext_extra_compile_args.extend(extra_compile_args or [])
 
         # store C++ standard so it can be used by build_ext to figure out the flags
-        self.cpp_std = cpp_std
+        self.std = std
 
         super().__init__(
             name=module,
